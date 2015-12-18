@@ -1,0 +1,104 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:context="com.example.admin.mychat.Login">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:typeface="sans"
+        android:textSize="20dp"
+        android:text="Username:"
+        android:layout_height="wrap_content"
+        />
+
+    <EditText
+        android:id="@+id/loginUsername"
+        android:hint="Please input your student ID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:typeface="sans"
+        android:textSize="20dp"
+        android:text="Password:" />
+
+    <EditText
+        android:id="@+id/loginPassword"
+        android:hint="Please input password"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_marginBottom="10dp"
+        android:text="Login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#11aa11"
+        android:textColor="#ffffff"
+        />
+
+    <TextView
+        android:id="@+id/prevIP"
+        android:layout_width="wrap_content"
+        android:typeface="sans"
+        android:textSize="20dp"
+        android:text=""
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:id="@+id/prevPort"
+        android:layout_width="wrap_content"
+        android:typeface="sans"
+        android:textSize="20dp"
+        android:text=""
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:typeface="sans"
+        android:textSize="20dp"
+        android:text="Set Server IP:"
+        android:layout_height="wrap_content"
+        />
+
+    <EditText
+        android:id="@+id/loginIP"
+        android:hint="Please input new Server IP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:typeface="sans"
+        android:textSize="20dp"
+        android:text="Set Server Port:"
+        android:layout_height="wrap_content"
+        />
+
+    <EditText
+        android:id="@+id/loginPort"
+        android:hint="Please input new Server Port"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/loginSet"
+        android:layout_marginBottom="10dp"
+        android:text="Set Server Information"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
+
+</LinearLayout>
