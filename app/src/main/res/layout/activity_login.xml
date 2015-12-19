@@ -12,13 +12,13 @@
         android:layout_width="wrap_content"
         android:typeface="sans"
         android:textSize="20dp"
-        android:text="Username:"
+        android:text="账号:"
         android:layout_height="wrap_content"
         />
 
     <EditText
-        android:id="@+id/loginUsername"
-        android:hint="Please input your student ID"
+        android:id="@+id/loginUserid"
+        android:hint="请输入账号"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -27,11 +27,11 @@
         android:layout_height="wrap_content"
         android:typeface="sans"
         android:textSize="20dp"
-        android:text="Password:" />
+        android:text="密码:" />
 
     <EditText
         android:id="@+id/loginPassword"
-        android:hint="Please input password"
+        android:hint="请输入密码"
         android:inputType="textPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
@@ -39,7 +39,7 @@
     <Button
         android:id="@+id/loginButton"
         android:layout_marginBottom="10dp"
-        android:text="Login"
+        android:text="登录"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#11aa11"
@@ -68,13 +68,13 @@
         android:layout_width="wrap_content"
         android:typeface="sans"
         android:textSize="20dp"
-        android:text="Set Server IP:"
+        android:text="修改服务器IP:"
         android:layout_height="wrap_content"
         />
 
     <EditText
         android:id="@+id/loginIP"
-        android:hint="Please input new Server IP"
+        android:hint="请输入新的服务器IP"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -82,20 +82,20 @@
         android:layout_width="wrap_content"
         android:typeface="sans"
         android:textSize="20dp"
-        android:text="Set Server Port:"
+        android:text="修改服务器端口号："
         android:layout_height="wrap_content"
         />
 
     <EditText
         android:id="@+id/loginPort"
-        android:hint="Please input new Server Port"
+        android:hint="请输入新的服务器端口号"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/loginSet"
         android:layout_marginBottom="10dp"
-        android:text="Set Server Information"
+        android:text="修改服务器设置"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

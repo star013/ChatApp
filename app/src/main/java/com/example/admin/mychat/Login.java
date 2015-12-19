@@ -1,12 +1,12 @@
 package com.example.admin.mychat;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,17 +18,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Login extends Activity implements View.OnClickListener{
-    CharSequence ipStr,portStr,nameStr,pwdStr;
+    CharSequence ipStr,portStr,idStr,pwdStr;
     Button blogin,bset;
     TextView prevIP,prevPort;
-    EditText name,password,ip,port;
+    EditText id,password,ip,port;
     SharedPreferences settings;
     static final int SUCCESS_LINK = 1;
     static final int FAIL_LINK = 2;
@@ -36,14 +35,19 @@ public class Login extends Activity implements View.OnClickListener{
         @Override
         public void handleMessage(Message message) {
             String info = (String)message.obj;
-            Toast.makeText(Login.this,info,Toast.LENGTH_LONG).show();
             switch (message.what){
                 case SUCCESS_LINK:
                     //Toast.makeText(Login.this,info,Toast.LENGTH_LONG).show();
-                    // 将登录的用户名储存起来
+                    // 将登录的用户账号储存起来
                     SharedPreferences.Editor editor = settings.edit();
-                    editor.putString("name",nameStr.toString());
+                    editor.putString("id", idStr.toString());
                     editor.commit();
+                    Intent intent = new Intent();
+                    intent.setClass(Login.this,MainActivity.class);
+                    // 调用 MainActivity
+                    startActivity(intent);
+                    // 结束 Login
+                    Login.this.finish();
                     break;
 
                 case FAIL_LINK:
@@ -67,15 +71,15 @@ public class Login extends Activity implements View.OnClickListener{
 
         prevIP = (TextView) findViewById(R.id.prevIP);
         prevPort = (TextView) findViewById(R.id.prevPort);
-        prevIP.setText("Server IP:\n"+ipStr);
-        prevPort.setText("Server Port:\n"+portStr);
+        prevIP.setText("服务器IP:\n"+ipStr);
+        prevPort.setText("服务器端口:\n"+portStr);
 
         ip = (EditText) findViewById(R.id.loginIP);
         port = (EditText) findViewById(R.id.loginPort);
         bset = (Button) findViewById(R.id.loginSet);
 
 
-        name = (EditText) findViewById(R.id.loginUsername);
+        id = (EditText) findViewById(R.id.loginUserid);
         password = (EditText) findViewById(R.id.loginPassword);
         blogin = (Button) findViewById(R.id.loginButton);
 
@@ -96,7 +100,7 @@ public class Login extends Activity implements View.OnClickListener{
                 Matcher match = ipPat.matcher(tempipStr);
                 //判断IP地址和端口是否符合要求
                 if (match.matches()){
-                    prevIP.setText("Server IP:\n"+tempipStr);
+                    prevIP.setText("服务器IP:\n"+tempipStr);
                     editor.putString("ip", tempipStr.toString());
                     editor.commit();
                     ipStr = tempipStr;
@@ -105,7 +109,7 @@ public class Login extends Activity implements View.OnClickListener{
                 }
                 match = portPat.matcher(tempPortStr);
                 if (match.matches()){
-                    prevPort.setText("Server Port:\n"+tempPortStr);
+                    prevPort.setText("服务器端口:\n"+tempPortStr);
                     editor.putString("port", tempPortStr.toString());
                     editor.commit();
                     portStr = tempPortStr;
@@ -115,7 +119,7 @@ public class Login extends Activity implements View.OnClickListener{
 
                 break;
             case R.id.loginButton:
-                nameStr = name.getText();
+                idStr = id.getText();
                 pwdStr = password.getText();
                 new Thread(new ConnectServer()).start();
 
@@ -132,7 +136,7 @@ public class Login extends Activity implements View.OnClickListener{
                 PrintStream out = new PrintStream(os,true,"US-ASCII");
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(),"US-ASCII"));
 
-                String sendInfo = nameStr.toString() + "_" + pwdStr.toString();
+                String sendInfo = idStr.toString() + "_" + pwdStr.toString();
                 out.print(sendInfo);
                 os.write((byte)0);
 
