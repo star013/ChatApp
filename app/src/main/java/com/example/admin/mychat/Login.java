@@ -37,7 +37,7 @@ public class Login extends Activity implements View.OnClickListener{
             String info = (String)message.obj;
             switch (message.what){
                 case SUCCESS_LINK:
-                    //Toast.makeText(Login.this,info,Toast.LENGTH_LONG).show();
+                    //Toast.makeText(Login.this,info,Toast.LENGTH_SHORT).show();
                     // 将登录的用户账号储存起来
                     SharedPreferences.Editor editor = settings.edit();
                     editor.putString("id", idStr.toString());
@@ -51,7 +51,7 @@ public class Login extends Activity implements View.OnClickListener{
                     break;
 
                 case FAIL_LINK:
-                    Toast.makeText(Login.this,info,Toast.LENGTH_LONG).show();
+                    Toast.makeText(Login.this,info,Toast.LENGTH_SHORT).show();
                     break;
             }
         }
@@ -105,7 +105,7 @@ public class Login extends Activity implements View.OnClickListener{
                     editor.commit();
                     ipStr = tempipStr;
                 }else{
-                    Toast.makeText(Login.this,"New IP is NOT valid!\nPlease input valid IP again",Toast.LENGTH_LONG).show();
+                    Toast.makeText(Login.this,"New IP is NOT valid!\nPlease input valid IP again",Toast.LENGTH_SHORT).show();
                 }
                 match = portPat.matcher(tempPortStr);
                 if (match.matches()){
@@ -114,7 +114,7 @@ public class Login extends Activity implements View.OnClickListener{
                     editor.commit();
                     portStr = tempPortStr;
                 }else{
-                    Toast.makeText(Login.this,"New Port is NOT valid!\nPlease input valid Port again",Toast.LENGTH_LONG).show();
+                    Toast.makeText(Login.this,"New Port is NOT valid!\nPlease input valid Port again",Toast.LENGTH_SHORT).show();
                 }
 
                 break;

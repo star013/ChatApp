@@ -1,5 +1,7 @@
 package com.example.admin.mychat;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -41,7 +43,7 @@ public class SettingFragment extends Fragment {
             String info = (String)message.obj;
             switch (message.what){
                 case SUCCESS_LINK:
-                    //Toast.makeText(getActivity(),info,Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
                     id = "NULL";
                     previd.setText(id.toString());
                     SharedPreferences.Editor editor = settings.edit();
@@ -56,7 +58,7 @@ public class SettingFragment extends Fragment {
                     break;
 
                 case FAIL_LINK:
-                    Toast.makeText(getActivity(),info,Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
                     break;
             }
         }
@@ -81,10 +83,10 @@ public class SettingFragment extends Fragment {
          * 显示需要用 view.findViewById()
          * */
         previd = (TextView) view.findViewById(R.id.previd);
-        previd.setText(id.toString());
+        previd.setText("账号:"+id.toString());
 
         prevName = (TextView) view.findViewById(R.id.prevName);
-        prevName.setText(name.toString());
+        prevName.setText("昵称:"+name.toString());
 
         prevSign = (TextView) view.findViewById(R.id.prevSign);
         prevSign.setText(sign.toString());
@@ -99,7 +101,24 @@ public class SettingFragment extends Fragment {
         logOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Thread(new ConnectServer()).start();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("友情提示");
+                builder.setMessage("确认退出登录吗？");
+                builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        new Thread(new ConnectServer()).start();
+                    }
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.create().show();
+
             }
         });
 
@@ -110,11 +129,16 @@ public class SettingFragment extends Fragment {
         setName.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                SharedPreferences.Editor editor = settings.edit();
                 CharSequence newNameStr = newName.getText();
-                prevName.setText(newNameStr.toString());
-                editor.putString("name", newNameStr.toString());
-                editor.commit();
+                if (newNameStr.length()<10){
+                    SharedPreferences.Editor editor = settings.edit();
+                    prevName.setText("昵称:"+newNameStr.toString());
+                    editor.putString("name", newNameStr.toString());
+                    editor.commit();
+                }else{
+                    Toast.makeText(getActivity(),"您输入的昵称过长\n请输入长度小于10个字符的昵称",Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 
@@ -125,11 +149,16 @@ public class SettingFragment extends Fragment {
         setSign.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                SharedPreferences.Editor editor = settings.edit();
                 CharSequence newSignStr = newSign.getText();
-                prevSign.setText(newSignStr.toString());
-                editor.putString("sign", newSignStr.toString());
-                editor.commit();
+                if (newSignStr.length()<20){
+                    SharedPreferences.Editor editor = settings.edit();
+                    prevSign.setText(newSignStr.toString());
+                    editor.putString("sign", newSignStr.toString());
+                    editor.commit();
+                }else{
+                    Toast.makeText(getActivity(),"您输入的个性签名过长\n请输入长度小于20个字符的个性签名",Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 
