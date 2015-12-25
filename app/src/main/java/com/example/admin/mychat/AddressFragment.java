@@ -34,28 +34,6 @@ public class AddressFragment extends Fragment {
     CharSequence id,name,friendIDstr,ipStr,portStr;
     SharedPreferences settings;
     EditText friendID;
-    static final int SUCCESS_LINK = 1;
-    static final int FAIL_LINK = 2;
-    static final int WRONG_LINK = 3;
-    Handler mHandler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message message) {
-            String info = (String)message.obj;
-            switch (message.what){
-                case SUCCESS_LINK:
-                    Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
-                    break;
-
-                case FAIL_LINK:
-                    Toast.makeText(getActivity(), "您的朋友不在线，请稍后再添加", Toast.LENGTH_SHORT).show();
-                    break;
-
-                case WRONG_LINK:
-                    Toast.makeText(getActivity(), "您输入的账号不存在", Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
 
     @Override
     public View onCreateView(LayoutInflater inflater,@Nullable ViewGroup container,@Nullable Bundle savedInstanceState){
@@ -108,7 +86,8 @@ public class AddressFragment extends Fragment {
         refreshFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                int i = Integer.parseInt("0123");
+                Toast.makeText(getActivity(),String.valueOf(i),Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -150,6 +129,36 @@ public class AddressFragment extends Fragment {
     }
 
 
+    static final int SUCCESS_LINK = 1;
+    static final int FAIL_LINK = 2;
+    static final int WRONG_LINK = 3;
+    /**
+     * 处理网络线程的消息
+     * */
+    Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message message) {
+            String info = (String)message.obj;
+            switch (message.what){
+                case SUCCESS_LINK:
+                    Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
+                    break;
+
+                case FAIL_LINK:
+                    Toast.makeText(getActivity(), "您的朋友不在线，请稍后再添加", Toast.LENGTH_SHORT).show();
+                    break;
+
+                case WRONG_LINK:
+                    Toast.makeText(getActivity(), "您输入的账号不存在", Toast.LENGTH_SHORT).show();
+                    break;
+                default:break;
+            }
+        }
+    };
+
+    /**
+     * 开启新线程处理网络连接
+     * */
     public class ConnectServer implements Runnable{
         public void run() {
             try {

@@ -4,6 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,8 +15,17 @@ import android.view.View.OnClickListener;
 import android.widget.LinearLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class MainActivity extends FragmentActivity implements OnClickListener {
+    SharedPreferences settings;
     // 底部菜单3个Linearlayout
     private LinearLayout ll_chat;
     private LinearLayout ll_address;
@@ -39,7 +51,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferences settings = getSharedPreferences("setting", 0);
-        CharSequence id = settings.getString("id","NULL");
+        CharSequence id = settings.getString("id", "NULL");
         if (id.equals("NULL")){
             // name == NULL  no user log in
             Intent intent = new Intent();
@@ -58,6 +70,99 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
             initEvent();
             // 初始化并设置当前Fragment
             initFragment(0);
+            // 初始化侦听socket
+            new Thread(new StartReceiver()).start();
+        }
+    }
+
+    static final int ADD_FRIEND = 1;
+    Handler handler = new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(Message message) {
+            String info = (String)message.obj;
+            switch (message.what){
+                case ADD_FRIEND:Toast.makeText(getApplicationContext(),info,Toast.LENGTH_SHORT).show();
+                    break;
+                default:break;
+            }
+        }
+    };
+
+    /**
+     * socket 接收端
+     * Created by admin on 2015/12/20.
+     */
+    public class Receiver extends Thread{
+        Socket socket;
+        public Receiver(Socket socket){
+            this.socket = socket;
+        }
+
+        public void run(){
+            try{
+                BufferedReader is=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter os=new PrintWriter(socket.getOutputStream());
+                String msg = is.readLine();
+                /**
+                 * 当接收到的信息是
+                 * 请求添加好友
+                 * */
+                if (msg.equals("ADD_FRIENDS")){
+                    msg = is.readLine();
+                    while(msg.equals("END")==false){
+                        Message message = Message.obtain();
+                        message.obj = msg;
+                        message.what = ADD_FRIEND;
+                        handler.sendMessage(message);
+                        msg = is.readLine();
+                    }
+
+                }
+
+                /**
+                 * 当接收到的信息是
+                 * 文字消息
+                 * */
+                if (msg.equals("TEXT_MESSAGE")){
+
+                }
+
+                /**
+                 * 当接收到的信息是
+                 * 文件
+                 * */
+                if (msg.equals("FILE_MESSAGE")){
+
+                }
+
+                is.close();
+                os.close();
+                socket.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 初始化侦听socket
+     * 可以针对多个客户端连接进行侦听
+     * */
+    public class StartReceiver implements Runnable{
+        public void run(){
+            settings = getSharedPreferences("setting", 0);
+            CharSequence idStr = settings.getString("id", "8000");
+            String portStr = idStr.toString().substring(idStr.length() - 4, idStr.length());
+            try{
+                ServerSocket serverSocket = new ServerSocket(Integer.parseInt(portStr));
+                //ServerSocket serverSocket = new ServerSocket(8000);
+                while (true){
+                    Receiver receiver = new Receiver(serverSocket.accept());
+                    receiver.start();
+                }
+            }catch (IOException e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -184,6 +289,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
         tv_address.setTextColor(Color.rgb(192,192,192));
         tv_setting.setTextColor(Color.rgb(192,192,192));
     }
+
 
 
 }

@@ -35,35 +35,6 @@ public class SettingFragment extends Fragment {
     TextView previd,prevName,prevSign;
     EditText newName,newSign;
 
-    static final int SUCCESS_LINK = 1;
-    static final int FAIL_LINK = 2;
-    Handler mHandler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message message) {
-            String info = (String)message.obj;
-            switch (message.what){
-                case SUCCESS_LINK:
-                    //Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
-                    id = "NULL";
-                    previd.setText(id.toString());
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString("id",id.toString());
-                    editor.commit();
-                    Intent intent = new Intent();
-                    intent.setClass(getActivity(), Login.class);
-                    // 调用 Login
-                    startActivity(intent);
-                    // 结束 MainActivity
-                    getActivity().finish();
-                    break;
-
-                case FAIL_LINK:
-                    Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
-
     @Override
     public View onCreateView(LayoutInflater inflater,@Nullable ViewGroup container,@Nullable Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_setting, container, false);
@@ -166,6 +137,43 @@ public class SettingFragment extends Fragment {
     }
 
 
+    static final int SUCCESS_LINK = 1;
+    static final int FAIL_LINK = 2;
+    /**
+     * 处理网络线程的消息
+     * */
+    Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message message) {
+            String info = (String)message.obj;
+            switch (message.what){
+                case SUCCESS_LINK:
+                    //Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
+                    id = "NULL";
+                    previd.setText(id.toString());
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putString("id",id.toString());
+                    editor.commit();
+                    Intent intent = new Intent();
+                    intent.setClass(getActivity(), Login.class);
+                    // 调用 Login
+                    startActivity(intent);
+                    // 结束 MainActivity
+                    getActivity().finish();
+                    break;
+
+                case FAIL_LINK:
+                    Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
+                    break;
+
+                default:break;
+            }
+        }
+    };
+
+    /**
+     * 开启新线程处理网络连接
+     * */
     public class ConnectServer implements Runnable{
         public void run() {
             try {
