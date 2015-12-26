@@ -35,17 +35,6 @@
             android:layout_margin="10dp"
             android:layout_weight="1"
             />
-        <Button
-            android:id="@+id/deleteFriend"
-            android:layout_marginBottom="10dp"
-            android:text="删除朋友"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:background="#ff0000"
-            android:textColor="#ffffff"
-            android:layout_margin="10dp"
-            android:layout_weight="1"
-            />
     </LinearLayout>
 
     <ListView

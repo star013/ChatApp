@@ -154,8 +154,8 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
             CharSequence idStr = settings.getString("id", "8000");
             String portStr = idStr.toString().substring(idStr.length() - 4, idStr.length());
             try{
-                ServerSocket serverSocket = new ServerSocket(Integer.parseInt(portStr));
-                //ServerSocket serverSocket = new ServerSocket(8000);
+                //ServerSocket serverSocket = new ServerSocket(Integer.parseInt(portStr));
+                ServerSocket serverSocket = new ServerSocket(8000);
                 while (true){
                     Receiver receiver = new Receiver(serverSocket.accept());
                     receiver.start();

@@ -2,6 +2,7 @@ package com.example.admin.mychat;
 
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,18 +15,28 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * 通讯录部分
@@ -34,16 +45,67 @@ public class AddressFragment extends Fragment {
     CharSequence id,name,friendIDstr,ipStr,portStr;
     SharedPreferences settings;
     EditText friendID;
+    ListView list;
+    View view;
+    List<AddrInfo> addrInfoList = new ArrayList<AddrInfo>();
+    MyAddrAdapter myAddrAdapter = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater,@Nullable ViewGroup container,@Nullable Bundle savedInstanceState){
-        View view = inflater.inflate(R.layout.fragment_address, container, false);
+        view = inflater.inflate(R.layout.fragment_address, container, false);
 
         settings = this.getActivity().getSharedPreferences("setting", 0);
         id = settings.getString("id", "");
         name = settings.getString("name", "暂时没有昵称");
         ipStr = settings.getString("ip", "166.111.140.14");
         portStr = settings.getString("port","8000");
+
+        /**
+         * 打开文件
+         * */
+        File file = new File(getActivity().getFilesDir(),"address.txt");
+        /*
+        ObjectOutputStream objOut = null;
+        AddrInfo a1 = new AddrInfo("2013011111","高聪","聪明");
+        AddrInfo a2 = new AddrInfo("2013011112","时鸿志","我思故我在");
+        addrInfoList.add(a1);
+        addrInfoList.add(a2);
+        try {
+            objOut = new ObjectOutputStream(new FileOutputStream(file));
+            objOut.writeObject(addrInfoList);
+            objOut.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }*/
+
+        ObjectInputStream objIn = null;
+        try {
+            objIn = new ObjectInputStream(new FileInputStream(file));
+            addrInfoList = (ArrayList<AddrInfo>)objIn.readObject();
+            objIn.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (ClassNotFoundException e){
+            e.printStackTrace();
+        }
+        /**
+         * 向 ListView 中添加数组信息 addrInfoList
+         * */
+        myAddrAdapter = new MyAddrAdapter(getActivity());
+        listShow();
+
+        /**
+         * ListView Item 点击事件：打开聊天窗口并显示聊天记录（如果有聊天记录的话）
+         * */
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                AddrInfo a = addrInfoList.get(position);
+                String friend_id = a.getId();
+                Toast.makeText(getActivity(),friend_id,Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
         /**
          * 添加好友
@@ -91,43 +153,17 @@ public class AddressFragment extends Fragment {
             }
         });
 
-        /**
-         * 删除好友
-         * */
-        Button deleteFriend = (Button) view.findViewById(R.id.deleteFriend);
-        deleteFriend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("删除好友");
-                builder.setMessage("请输入好友账号：");
-                // 放置输入栏
-                friendID = new EditText(getActivity());
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT);
-                friendID.setLayoutParams(lp);
-                builder.setView(friendID);
-
-                builder.setPositiveButton("删除", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        dialog.dismiss();
-                    }
-                });
-                builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                builder.create().show();
-
-            }
-        });
-
         return view;
     }
 
+    /**
+     * 向 ListView 中添加数组信息 addrInfoList
+     * */
+    void listShow(){
+        list = (ListView) view.findViewById(R.id.friendList);
+        myAddrAdapter.loadData(addrInfoList);
+        list.setAdapter(myAddrAdapter);
+    }
 
     static final int SUCCESS_LINK = 1;
     static final int FAIL_LINK = 2;

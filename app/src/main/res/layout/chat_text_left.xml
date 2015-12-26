@@ -11,7 +11,8 @@
         <TextView
             android:id="@+id/tv_sendtime"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="2013-5-5"/>
     </LinearLayout>
     <RelativeLayout
         android:layout_width="fill_parent"
