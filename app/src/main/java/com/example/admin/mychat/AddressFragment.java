@@ -34,7 +34,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -64,10 +66,11 @@ public class AddressFragment extends Fragment {
          * 打开文件
          * */
         File file = new File(getActivity().getFilesDir(),"address.txt");
-        /*
+
+
         ObjectOutputStream objOut = null;
-        AddrInfo a1 = new AddrInfo("2013011111","高聪","聪明");
-        AddrInfo a2 = new AddrInfo("2013011112","时鸿志","我思故我在");
+        AddrInfo a1 = new AddrInfo("2013011466","金晟","主席");
+        AddrInfo a2 = new AddrInfo("2013011183","金星宇","keep moving");
         addrInfoList.add(a1);
         addrInfoList.add(a2);
         try {
@@ -76,7 +79,7 @@ public class AddressFragment extends Fragment {
             objOut.close();
         }catch (IOException e){
             e.printStackTrace();
-        }*/
+        }
 
         ObjectInputStream objIn = null;
         try {
@@ -102,7 +105,14 @@ public class AddressFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 AddrInfo a = addrInfoList.get(position);
                 String friend_id = a.getId();
-                Toast.makeText(getActivity(),friend_id,Toast.LENGTH_SHORT).show();
+                String friend_name = a.getName();
+                Intent intent =new Intent(getActivity(),ChatActivity.class);
+                /**
+                 * activity 之间传递信息
+                 * */
+                intent.putExtra("friend_id",friend_id);
+                intent.putExtra("friend_name",friend_name);
+                startActivity(intent);
             }
         });
 
@@ -214,7 +224,6 @@ public class AddressFragment extends Fragment {
                 String rcv = new String(bytes);
                 // 截取有意义的一段
                 String rcvtrim = rcv.substring(0,length);
-                System.out.print("From Server: " + rcvtrim);
 
                 out.close();
                 in.close();

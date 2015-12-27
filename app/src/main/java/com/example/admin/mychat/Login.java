@@ -128,7 +128,7 @@ public class Login extends Activity implements View.OnClickListener{
     }
 
 
-    public class ConnectServer implements Runnable{
+    private class ConnectServer implements Runnable{
         public void run() {
             try {
                 Socket socket = new Socket(ipStr.toString(), Integer.parseInt(portStr.toString()));
@@ -146,7 +146,6 @@ public class Login extends Activity implements View.OnClickListener{
                 String rcv = new String(bytes);
                 // 截取有意义的一段
                 String rcvtrim = rcv.substring(0,length);
-                System.out.print("From Server: "+rcvtrim);
 
                 out.close();
                 in.close();
