@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,10 +18,11 @@ import java.util.List;
  */
 public class MyChatAdapter extends BaseAdapter {
     private LayoutInflater layoutInflater;
-    private List<ChatInfo> chatInfoList = null;
+    private List<ChatInfo> chatInfoList;
 
-    public MyChatAdapter(Context context){
+    public MyChatAdapter(Context context,List<ChatInfo> chatInfoList){
         this.layoutInflater = LayoutInflater.from(context);
+        this.chatInfoList = chatInfoList;
     }
 
     @Override
@@ -40,31 +43,42 @@ public class MyChatAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ChatInfo a = chatInfoList.get(position);
-        if (a.getIsCome()){
-            // 消息是对方发过来的
-            convertView = layoutInflater.inflate(R.layout.chat_text_left,null);
-        }else{
-            convertView = layoutInflater.inflate(R.layout.chat_text_right,null);
+        ViewHolder viewHolder = null;
+        if (convertView==null){
+            if (a.getIsCome()){
+                // 消息是对方发过来的
+                convertView = layoutInflater.inflate(R.layout.chat_text_left,null);
+            }else{
+                convertView = layoutInflater.inflate(R.layout.chat_text_right,null);
+            }
+            viewHolder = new ViewHolder();
+            viewHolder.time = (TextView) convertView.findViewById(R.id.tv_sendtime);
+            viewHolder.content = (TextView) convertView.findViewById(R.id.tv_chatcontent);
+            viewHolder.isCome = a.getIsCome();
+            convertView.setTag(viewHolder);
+        }else {
+            viewHolder = (ViewHolder)convertView.getTag();
         }
-        TextView time = (TextView) convertView.findViewById(R.id.tv_sendtime);
-        TextView content = (TextView) convertView.findViewById(R.id.tv_chatcontent);
-
-        time.setText(a.getDate());
-        content.setText(a.getText());
+        viewHolder.time.setText(a.getDate());
+        viewHolder.content.setText(a.getText());
 
         return convertView;
     }
 
     /**
-     * 加载数据
+     * 更新数据
      * */
-    public void loadData(List<ChatInfo> chatInfoList){
-        this.chatInfoList = chatInfoList;
+    public void refresh(List<ChatInfo> newList){
+        chatInfoList = newList;
+        notifyDataSetChanged();
     }
+
     /**
-     * 增加一条记录的情况
+     * 通过ViewHolder显示项的内容
      * */
-    public void addOneData(ChatInfo a){
-        chatInfoList.add(a);
+    static class ViewHolder{
+        public TextView time;
+        public TextView content;
+        public boolean isCome;
     }
 }

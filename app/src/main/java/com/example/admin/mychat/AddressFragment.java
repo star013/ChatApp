@@ -67,7 +67,7 @@ public class AddressFragment extends Fragment {
          * */
         File file = new File(getActivity().getFilesDir(),"address.txt");
 
-
+        /*
         ObjectOutputStream objOut = null;
         AddrInfo a1 = new AddrInfo("2013011466","金晟","主席");
         AddrInfo a2 = new AddrInfo("2013011183","金星宇","keep moving");
@@ -80,7 +80,7 @@ public class AddressFragment extends Fragment {
         }catch (IOException e){
             e.printStackTrace();
         }
-
+        */
         ObjectInputStream objIn = null;
         try {
             objIn = new ObjectInputStream(new FileInputStream(file));
@@ -112,6 +112,7 @@ public class AddressFragment extends Fragment {
                  * */
                 intent.putExtra("friend_id",friend_id);
                 intent.putExtra("friend_name",friend_name);
+                intent.putExtra("my_id",AddressFragment.this.id.toString());
                 startActivity(intent);
             }
         });

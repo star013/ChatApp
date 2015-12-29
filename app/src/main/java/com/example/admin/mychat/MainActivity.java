@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Telephony;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -46,6 +48,10 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
     private AddressFragment addressFragment;
     private SettingFragment settingFragment;
 
+    // 接收到的消息
+    String receivedID = null;
+    ChatInfo receivedChatInfo = null;
+    AddrInfo receivedAddrInfo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,13 +82,19 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
     }
 
     static final int ADD_FRIEND = 1;
+    static final int TEXT_MESSAGE = 2;
     Handler handler = new Handler(Looper.getMainLooper()){
         @Override
         public void handleMessage(Message message) {
-            String info = (String)message.obj;
             switch (message.what){
-                case ADD_FRIEND:Toast.makeText(getApplicationContext(),info,Toast.LENGTH_SHORT).show();
+                case ADD_FRIEND:
+                    Toast.makeText(getApplicationContext(),receivedAddrInfo.getId(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),receivedAddrInfo.getName(),Toast.LENGTH_SHORT).show();
                     break;
+
+                case TEXT_MESSAGE:
+                    Toast.makeText(getApplicationContext(),receivedChatInfo.getDate(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),receivedChatInfo.getText(),Toast.LENGTH_SHORT).show();
                 default:break;
             }
         }
@@ -100,23 +112,17 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 
         public void run(){
             try{
-                BufferedReader is=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter os=new PrintWriter(socket.getOutputStream());
-                String msg = is.readLine();
+                Message message = Message.obtain();
+                ObjectInputStream objIn = new ObjectInputStream(socket.getInputStream());
+                String msg = (String)objIn.readObject();
                 /**
                  * 当接收到的信息是
                  * 请求添加好友
                  * */
                 if (msg.equals("ADD_FRIENDS")){
-                    msg = is.readLine();
-                    while(msg.equals("END")==false){
-                        Message message = Message.obtain();
-                        message.obj = msg;
-                        message.what = ADD_FRIEND;
-                        handler.sendMessage(message);
-                        msg = is.readLine();
-                    }
-
+                    receivedAddrInfo = (AddrInfo)objIn.readObject();
+                    message.what = ADD_FRIEND;
+                    handler.sendMessage(message);
                 }
 
                 /**
@@ -124,7 +130,10 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                  * 文字消息
                  * */
                 if (msg.equals("TEXT_MESSAGE")){
-
+                    receivedID = (String)objIn.readObject();
+                    receivedChatInfo = (ChatInfo)objIn.readObject();
+                    message.what = TEXT_MESSAGE;
+                    handler.sendMessage(message);
                 }
 
                 /**
@@ -135,10 +144,11 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 
                 }
 
-                is.close();
-                os.close();
+                objIn.close();
                 socket.close();
             }catch (IOException e){
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }

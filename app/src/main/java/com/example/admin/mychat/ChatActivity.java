@@ -22,8 +22,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -36,11 +38,12 @@ import java.util.regex.Pattern;
 public class ChatActivity extends Activity {
     ListView list;
     MyChatAdapter myChatAdapter;
-    List<ChatInfo> chatInfoList = null;
+    List<ChatInfo> chatInfoList = new ArrayList<ChatInfo>();
     Button bt_send;
     EditText et_content;
     String friend_id;
     String friend_name;
+    String my_id;
     String friend_ip = null;
     String send_info;
     ChatInfo sendingChatInfo = null;
@@ -59,10 +62,19 @@ public class ChatActivity extends Activity {
         friend_id = intent.getStringExtra("friend_id");
         friend_name = intent.getStringExtra("friend_name");
         getActionBar().setTitle(friend_name);
+        my_id = intent.getStringExtra("my_id");
+        //Toast.makeText(this,my_id,Toast.LENGTH_SHORT).show();
+
+        /**
+         * 创建接口
+         * 不容忽视
+         * */
+
 
         /**
          * 打开已有的聊天记录
          * */
+        /*
         File file = new File(this.getFilesDir(),friend_id);
         ObjectInputStream objIn = null;
         try {
@@ -74,8 +86,15 @@ public class ChatActivity extends Activity {
         }catch (ClassNotFoundException e){
             e.printStackTrace();
         }
+        */
 
-        listShow();
+        list = (ListView)findViewById(R.id.chatList);
+        chatInfoList.add(new ChatInfo("1", "hi\nhello\ni am chair man oooooooh yeahhhhhhhhh\nhahaha", true));
+        chatInfoList.add(new ChatInfo("2","jin", false));
+        Toast.makeText(this,"list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
+        myChatAdapter = new MyChatAdapter(this,chatInfoList);
+        list.setAdapter(myChatAdapter);
+
 
         /**
          * 发送消息
@@ -86,17 +105,28 @@ public class ChatActivity extends Activity {
                 send_info = et_content.getText().toString();
                 // 发送不为空的消息
                 if (send_info.equals("")==false){
+                    Toast.makeText(ChatActivity.this,"list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
+                    warpUpSendMessage();
+                    if (chatInfoList.size()==0){
+                        chatInfoList.add(sendingChatInfo);
+                        Toast.makeText(ChatActivity.this,"add list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
+                        list.setAdapter(myChatAdapter);
+                    }else{
+                        chatInfoList.add(sendingChatInfo);
+                        myChatAdapter.refresh(chatInfoList);
+                    }
+
+                    /*
                     // 没有对方ip，则需要查询
                     if (friend_ip==null){
                         new Thread(new ConnectServer()).start();
                     }else{
-                        /**
-                         * 获取时间
-                         * */
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd  hh:mm");
-                        String date = simpleDateFormat.format(new Date());
-                        sendingChatInfo = new ChatInfo(date,send_info,false);
+                        // 包装好要发送的信息 sendingChatInfo
+                        warpUpSendMessage();
+                        // 发送消息
+                        new Thread(new SendMessage()).start();
                     }
+                    */
                 }
             }
         });
@@ -113,12 +143,15 @@ public class ChatActivity extends Activity {
     private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message message) {
-            String info = (String)message.obj;
-            //Toast.makeText(ChatActivity.this,info,Toast.LENGTH_SHORT).show();
             switch (message.what){
                 case SUCCESS_LINK_SERVER:
-                    //Toast.makeText(ChatActivity.this,"succeed",Toast.LENGTH_SHORT).show();
+                    String info = (String)message.obj;
+                    Toast.makeText(ChatActivity.this,info,Toast.LENGTH_SHORT).show();
                     friend_ip = info;
+                    // 包装好要发送的信息 sendingChatInfo
+                    warpUpSendMessage();
+                    // 发送消息
+                    new Thread(new SendMessage()).start();
                     break;
 
                 case FAIL_LINK_SERVER:
@@ -132,14 +165,34 @@ public class ChatActivity extends Activity {
                     break;
 
                 case SUCCESS_LINK_FRIEND:
+                    Toast.makeText(ChatActivity.this,"succeed send",Toast.LENGTH_SHORT).show();
+                    /*
+                    if (chatInfoList==null){
+                        chatInfoList = new ArrayList<ChatInfo>();
+                        chatInfoList.add(sendingChatInfo);
+                        listFirstShow();
+                    }
                     chatInfoList.add(sendingChatInfo);
-                    listShow();
+                    myChatAdapter.refresh(chatInfoList);
+                    */
                     break;
 
                 default:break;
             }
         }
     };
+
+    /**
+     * 包装好要发送的信息 sendingChatInfo
+     * */
+    void warpUpSendMessage(){
+        /**
+         * 获取时间
+         * */
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd  hh:mm");
+        String date = simpleDateFormat.format(new Date());
+        sendingChatInfo = new ChatInfo(date,send_info,false);
+    }
 
     /**
      * 向服务器查询，获取对方的ip地址
@@ -192,62 +245,40 @@ public class ChatActivity extends Activity {
     }
 
     /**
-     *
+     * 向好友发送信息
      * */
     private class SendMessage implements Runnable{
         @Override
         public void run() {
+            Message message = Message.obtain();
             try {
                 Socket socket = new Socket(friend_ip, 8000);
-                OutputStream os = socket.getOutputStream();
-                PrintStream out = new PrintStream(os,true,"US-ASCII");
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(),"US-ASCII"));
+                ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());
+                // 文字消息标识符
+                String str = new String("TEXT_MESSAGE");
+                objOut.writeObject(str);
+                // 自己的ID
+                objOut.writeObject(my_id);
+                // 聊天消息对象
+                objOut.writeObject(sendingChatInfo);
 
-                // 查询 id 号
-                String sendInfo = "q"+friend_id;
-                out.print(sendInfo);
-                os.write((byte)0);
-
-                char[] bytes = new char[30];
-                int length = in.read(bytes);
-
-                String rcv = new String(bytes);
-                // 截取有意义的一段
-                String rcvtrim = rcv.substring(0,length);
-
-                out.close();
-                in.close();
+                objOut.close();
                 socket.close();
 
-                Message message = Message.obtain();
                 message.obj ="succeed";
                 message.what = SUCCESS_LINK_FRIEND;
                 mHandler.sendMessage(message);
-
-
             } catch (UnknownHostException e) {
-                Message message = Message.obtain();
                 message.obj ="fail to link friends";
                 message.what = FAIL_LINK_FRIEND;
                 mHandler.sendMessage(message);
                 e.printStackTrace();
             } catch (IOException e) {
-                Message message = Message.obtain();
                 message.obj ="fail to link friends";
                 message.what = FAIL_LINK_FRIEND;
                 mHandler.sendMessage(message);
                 e.printStackTrace();
             }
-        }
-    }
-    /**
-     * 向 ListView 中添加数组信息 chatInfoList
-     * */
-    void listShow(){
-        if (chatInfoList != null){
-            list = (ListView) this.findViewById(R.id.friendList);
-            myChatAdapter.loadData(chatInfoList);
-            list.setAdapter(myChatAdapter);
         }
     }
 
