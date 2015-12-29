@@ -1,7 +1,10 @@
 package com.example.admin.mychat;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,7 +50,7 @@ public class ChatActivity extends Activity {
     String friend_ip = null;
     String send_info;
     ChatInfo sendingChatInfo = null;
-    ChatInfo comingChatInfo = null;
+    ChatInfo receivedChatInfo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,15 +69,8 @@ public class ChatActivity extends Activity {
         //Toast.makeText(this,my_id,Toast.LENGTH_SHORT).show();
 
         /**
-         * 创建接口
-         * 不容忽视
-         * */
-
-
-        /**
          * 打开已有的聊天记录
          * */
-        /*
         File file = new File(this.getFilesDir(),friend_id);
         ObjectInputStream objIn = null;
         try {
@@ -86,15 +82,27 @@ public class ChatActivity extends Activity {
         }catch (ClassNotFoundException e){
             e.printStackTrace();
         }
-        */
 
+
+        /**
+         * 创建接口
+         * 不容忽视
+         * */
         list = (ListView)findViewById(R.id.chatList);
-        chatInfoList.add(new ChatInfo("1", "hi\nhello\ni am chair man oooooooh yeahhhhhhhhh\nhahaha", true));
-        chatInfoList.add(new ChatInfo("2","jin", false));
-        Toast.makeText(this,"list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
-        myChatAdapter = new MyChatAdapter(this,chatInfoList);
-        list.setAdapter(myChatAdapter);
+        //chatInfoList.add(new ChatInfo("1", "hi\nhello\ni am chair man oooooooh yeahhhhhhhhh\nhahaha", true));
+        //chatInfoList.add(new ChatInfo("2","jin", false));
+        //Toast.makeText(this,"list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
+        if (chatInfoList.size()>0){
+            myChatAdapter = new MyChatAdapter(this,chatInfoList);
+            list.setAdapter(myChatAdapter);
+        }
 
+        /**
+         * 注册广播
+         */
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(friend_id);
+        registerReceiver(new TextBroadcastReceiver(),intentFilter);
 
         /**
          * 发送消息
@@ -104,33 +112,37 @@ public class ChatActivity extends Activity {
             public void onClick(View v) {
                 send_info = et_content.getText().toString();
                 // 发送不为空的消息
-                if (send_info.equals("")==false){
-                    Toast.makeText(ChatActivity.this,"list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
-                    warpUpSendMessage();
-                    if (chatInfoList.size()==0){
-                        chatInfoList.add(sendingChatInfo);
-                        Toast.makeText(ChatActivity.this,"add list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
-                        list.setAdapter(myChatAdapter);
-                    }else{
-                        chatInfoList.add(sendingChatInfo);
-                        myChatAdapter.refresh(chatInfoList);
-                    }
-
-                    /*
+                if (send_info.equals("") == false) {
                     // 没有对方ip，则需要查询
-                    if (friend_ip==null){
+                    if (friend_ip == null) {
                         new Thread(new ConnectServer()).start();
-                    }else{
-                        // 包装好要发送的信息 sendingChatInfo
-                        warpUpSendMessage();
+                    } else {
                         // 发送消息
                         new Thread(new SendMessage()).start();
                     }
-                    */
                 }
             }
         });
 
+    }
+
+    /**
+     * 处理接收到的广播的信息
+     * 处理文字信息
+     */
+    public class TextBroadcastReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            receivedChatInfo = (ChatInfo)intent.getSerializableExtra("receivedChatInfo");
+            chatInfoList.add(receivedChatInfo);
+            if (chatInfoList.size()==1){
+                myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
+                list.setAdapter(myChatAdapter);
+            }else{
+                myChatAdapter.notifyDataSetChanged();
+            }
+        }
     }
 
     static final int SUCCESS_LINK_SERVER = 1;
@@ -146,10 +158,8 @@ public class ChatActivity extends Activity {
             switch (message.what){
                 case SUCCESS_LINK_SERVER:
                     String info = (String)message.obj;
-                    Toast.makeText(ChatActivity.this,info,Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(ChatActivity.this,info,Toast.LENGTH_SHORT).show();
                     friend_ip = info;
-                    // 包装好要发送的信息 sendingChatInfo
-                    warpUpSendMessage();
                     // 发送消息
                     new Thread(new SendMessage()).start();
                     break;
@@ -165,16 +175,15 @@ public class ChatActivity extends Activity {
                     break;
 
                 case SUCCESS_LINK_FRIEND:
-                    Toast.makeText(ChatActivity.this,"succeed send",Toast.LENGTH_SHORT).show();
-                    /*
-                    if (chatInfoList==null){
-                        chatInfoList = new ArrayList<ChatInfo>();
-                        chatInfoList.add(sendingChatInfo);
-                        listFirstShow();
-                    }
+                    //Toast.makeText(ChatActivity.this,"succeed send",Toast.LENGTH_SHORT).show();
                     chatInfoList.add(sendingChatInfo);
-                    myChatAdapter.refresh(chatInfoList);
-                    */
+                    if (chatInfoList.size()==1){
+                        myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
+                        list.setAdapter(myChatAdapter);
+                    }else{
+                        myChatAdapter.notifyDataSetChanged();
+                    }
+
                     break;
 
                 default:break;
@@ -251,6 +260,8 @@ public class ChatActivity extends Activity {
         @Override
         public void run() {
             Message message = Message.obtain();
+            // 包装好要发送的信息 sendingChatInfo
+            warpUpSendMessage();
             try {
                 Socket socket = new Socket(friend_ip, 8000);
                 ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());

@@ -66,14 +66,6 @@ public class MyChatAdapter extends BaseAdapter {
     }
 
     /**
-     * 更新数据
-     * */
-    public void refresh(List<ChatInfo> newList){
-        chatInfoList = newList;
-        notifyDataSetChanged();
-    }
-
-    /**
      * 通过ViewHolder显示项的内容
      * */
     static class ViewHolder{

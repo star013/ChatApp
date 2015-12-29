@@ -93,8 +93,18 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                     break;
 
                 case TEXT_MESSAGE:
-                    Toast.makeText(getApplicationContext(),receivedChatInfo.getDate(),Toast.LENGTH_SHORT).show();
-                    Toast.makeText(getApplicationContext(),receivedChatInfo.getText(),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(),receivedChatInfo.getDate(),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(),receivedChatInfo.getText(),Toast.LENGTH_SHORT).show();
+                    /**
+                     * 已收到的对方的 ID 作为广播的标识符
+                     * 用 Bundle 传递对象
+                     */
+                    receivedChatInfo.setIsCome(true);
+                    Intent intent = new Intent(receivedID);
+                    Bundle bundle=new Bundle();
+                    bundle.putSerializable("receivedChatInfo",receivedChatInfo);
+                    intent.putExtras(bundle);
+                    MainActivity.this.sendBroadcast(intent);
                 default:break;
             }
         }
