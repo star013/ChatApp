@@ -19,12 +19,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends FragmentActivity implements OnClickListener {
     SharedPreferences settings;
@@ -90,6 +96,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                 case ADD_FRIEND:
                     Toast.makeText(getApplicationContext(),receivedAddrInfo.getId(),Toast.LENGTH_SHORT).show();
                     Toast.makeText(getApplicationContext(),receivedAddrInfo.getName(),Toast.LENGTH_SHORT).show();
+                    AddFriendandRefreshAddrFragment();
                     break;
 
                 case TEXT_MESSAGE:
@@ -130,7 +137,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                  * 当接收到的信息是
                  * 请求添加好友
                  * */
-                if (msg.equals("ADD_FRIENDS")){
+                if (msg.equals("ADD_FRIEND")){
                     receivedAddrInfo = (AddrInfo)objIn.readObject();
                     message.what = ADD_FRIEND;
                     handler.sendMessage(message);
@@ -162,6 +169,38 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    void AddFriendandRefreshAddrFragment(){
+        File file = new File(this.getFilesDir(),"address.txt");
+        List<AddrInfo> addrInfoList = null;
+        try {
+            ObjectInputStream objIn = new ObjectInputStream(new FileInputStream(file));
+            addrInfoList = (ArrayList<AddrInfo>)objIn.readObject();
+            objIn.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (ClassNotFoundException e){
+            e.printStackTrace();
+        }
+        if (addrInfoList == null){
+            addrInfoList = new ArrayList<AddrInfo>();
+        }
+        addrInfoList.add(receivedAddrInfo);
+        try {
+            ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(file));
+            objOut.writeObject(addrInfoList);
+            objOut.close();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (addressFragment != null){
+            final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.detach(addressFragment);
+            ft.attach(addressFragment);
+            ft.commit();
         }
     }
 

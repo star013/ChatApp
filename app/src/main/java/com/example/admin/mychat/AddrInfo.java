@@ -13,11 +13,12 @@ public class AddrInfo implements Serializable{
     private String id;
     private String sign;
     private String name;
-    //public Bitmap avatar;
-    AddrInfo(String id,String name,String sign){
+    private BitMapData avatar;
+    AddrInfo(String id,String name,String sign,Bitmap avatar){
         this.id = id;
         this.sign = sign;
         this.name = name;
+        this.avatar = new BitMapData(BytesBitmap.getBytes(avatar));
     }
 
     public String getId(){
@@ -29,11 +30,7 @@ public class AddrInfo implements Serializable{
     public String getSign(){
         return sign;
     }
-
-    synchronized public void setSign(String sign){
-        this.sign = sign;
-    }
-    synchronized public void setName(String name){
-        this.name = name;
+    public Bitmap getAvatar(){
+        return BytesBitmap.getBitmap(avatar.getBitmapBytes());
     }
 }

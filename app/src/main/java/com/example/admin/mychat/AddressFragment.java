@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -44,13 +48,14 @@ import java.util.List;
  * 通讯录部分
  */
 public class AddressFragment extends Fragment {
-    CharSequence id,name,friendIDstr,ipStr,portStr;
+    CharSequence id,name,friendIDstr,ipStr,portStr,sign;
     SharedPreferences settings;
     EditText friendID;
     ListView list;
     View view;
     List<AddrInfo> addrInfoList = new ArrayList<AddrInfo>();
     MyAddrAdapter myAddrAdapter = null;
+    String myAvatarPath;
 
     @Override
     public View onCreateView(LayoutInflater inflater,@Nullable ViewGroup container,@Nullable Bundle savedInstanceState){
@@ -61,6 +66,8 @@ public class AddressFragment extends Fragment {
         name = settings.getString("name", "暂时没有昵称");
         ipStr = settings.getString("ip", "166.111.140.14");
         portStr = settings.getString("port","8000");
+        sign = settings.getString("sign","暂时没有个性签名");
+        myAvatarPath = settings.getString("myAvatarPath",null);
 
         /**
          * 打开文件
@@ -129,6 +136,17 @@ public class AddressFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         myAddrAdapter.remove(position);
+                        /**
+                         * 打开文件
+                         * */
+                        File file = new File(getActivity().getFilesDir(),"address.txt");
+                        try {
+                            ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(file));
+                            objOut.writeObject(addrInfoList);
+                            objOut.close();
+                        }catch (IOException e){
+                            e.printStackTrace();
+                        }
                         dialog.dismiss();
                     }
                 });
@@ -139,7 +157,8 @@ public class AddressFragment extends Fragment {
                     }
                 });
                 builder.create().show();
-                return false;
+                // return true 这样能够区分开 setOnItemClickListener 和 setOnItemLongClickListener
+                return true;
             }
         });
 
@@ -204,16 +223,18 @@ public class AddressFragment extends Fragment {
     private static final int SUCCESS_LINK = 21;
     private static final int FAIL_LINK = 22;
     private static final int WRONG_LINK = 23;
+    private static final int FAIL_LINK_FRIEND = 24;
     /**
      * 处理网络线程的消息
      * */
     private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message message) {
-            String info = (String)message.obj;
             switch (message.what){
                 case SUCCESS_LINK:
-                    Toast.makeText(getActivity(),info,Toast.LENGTH_SHORT).show();
+                    friend_ip = (String)message.obj;
+                    //Toast.makeText(getActivity(),friend_ip,Toast.LENGTH_SHORT).show();
+                    new Thread(new AddNewFriend()).start();
                     break;
 
                 case FAIL_LINK:
@@ -223,6 +244,10 @@ public class AddressFragment extends Fragment {
                 case WRONG_LINK:
                     Toast.makeText(getActivity(), "您输入的账号不存在", Toast.LENGTH_SHORT).show();
                     break;
+
+                case FAIL_LINK_FRIEND:
+                    Toast.makeText(getActivity(),"网络出现故障，请稍后再添加"+(String)message.obj,Toast.LENGTH_SHORT).show();
+                    break;
                 default:break;
             }
         }
@@ -231,7 +256,7 @@ public class AddressFragment extends Fragment {
     /**
      * 开启新线程处理网络连接
      * */
-    public class ConnectServer implements Runnable{
+    private class ConnectServer implements Runnable{
         public void run() {
             try {
                 Socket socket = new Socket(ipStr.toString(), Integer.parseInt(portStr.toString()));
@@ -269,6 +294,57 @@ public class AddressFragment extends Fragment {
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    String friend_ip;
+    AddrInfo sendingAddrInfo;
+    /**
+     * 包装好要发送的信息 sendingAddrInfo
+     * */
+    private void warpUpSendAddrInfo(){
+        Bitmap bitmap = null;
+        // 加载头像
+        if (myAvatarPath!=null){
+            bitmap = BitmapFactory.decodeFile(myAvatarPath);
+        }else {
+            Resources resources = getResources();
+            bitmap = BitmapFactory.decodeResource(resources,R.drawable.stranger_avatar);
+        }
+        sendingAddrInfo = new AddrInfo(id.toString(),name.toString(),sign.toString(),bitmap);
+    }
+    /**
+     * 向已经获得 IP 地址的好友发送添加信息
+     */
+    private class AddNewFriend implements Runnable{
+        @Override
+        public void run() {
+            Message message = Message.obtain();
+            // 包装好要发送的信息 sendingAddrInfo
+            warpUpSendAddrInfo();
+            try {
+                Socket socket = new Socket(friend_ip, 8000);
+                ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());
+                // 添加好友请求 标识符
+                String str = new String("ADD_FRIEND");
+                objOut.writeObject(str);
+                // 聊天消息对象
+                objOut.writeObject(sendingAddrInfo);
+
+                objOut.close();
+                socket.close();
+            } catch (UnknownHostException e) {
+                message.what = FAIL_LINK_FRIEND;
+                message.obj = "UnknownHostException";
+                mHandler.sendMessage(message);
+                e.printStackTrace();
+            } catch (IOException e) {
+                message.what = FAIL_LINK_FRIEND;
+                message.obj = "IOException";
+                mHandler.sendMessage(message);
                 e.printStackTrace();
             }
         }
