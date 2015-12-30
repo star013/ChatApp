@@ -4,10 +4,15 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -15,11 +20,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -35,6 +42,7 @@ public class SettingFragment extends Fragment {
     SharedPreferences settings;
     TextView previd,prevName,prevSign;
     EditText newName,newSign;
+    ImageView myAvatar;
 
     @Override
     public View onCreateView(LayoutInflater inflater,@Nullable ViewGroup container,@Nullable Bundle savedInstanceState){
@@ -51,6 +59,7 @@ public class SettingFragment extends Fragment {
         ipStr = settings.getString("ip", "166.111.140.14");
         portStr = settings.getString("port","8000");
         sign = settings.getString("sign","暂时没有个性签名");
+        String myAvatarPath = settings.getString("myAvatarPath",null);
         /**
          * 显示需要用 view.findViewById()
          * */
@@ -62,6 +71,15 @@ public class SettingFragment extends Fragment {
 
         prevSign = (TextView) view.findViewById(R.id.prevSign);
         prevSign.setText(sign.toString());
+
+        // 加载头像
+        myAvatar = (ImageView) view.findViewById(R.id.avatar);
+        if (myAvatarPath!=null){
+            Bitmap bitmap = BitmapFactory.decodeFile(myAvatarPath);
+            if (bitmap != null) {
+                myAvatar.setImageBitmap(bitmap);
+            }
+        }
 
 
         /**
@@ -179,9 +197,113 @@ public class SettingFragment extends Fragment {
             }
         });
 
+        /**
+         * 设置头像
+         */
+        Button setAvatar = (Button) view.findViewById(R.id.setAvatar);
+        setAvatar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initFile("avatar.bmp");
+                openGallery();
+            }
+        });
+
         return view;
     }
 
+    // 为了便于读取图片
+    private String fileName;
+    private File tempFile;
+    // 裁剪大小 CROP
+    private final int CROP = 100;
+    private static final int CROP_PHOTO_CODE = 16;
+    private static final int OPEN_GALLERY_CODE = 17;
+
+    /**
+     * 初始化文件对象
+     * @param pictureName 图片的名称
+     */
+    public void initFile(String pictureName) {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            // 如果SD卡存在，则存在SD卡中
+            String path = Environment.getExternalStorageDirectory() + File.separator + "MyChat" + File.separator;
+            File file = new File(path);
+            if (!file.exists()){
+                // 路径不存在则创建一个文件夹
+                file.mkdir();
+            }
+            fileName = path + pictureName;
+            tempFile = new File(fileName);
+        }else{
+            // 如果SD卡不存在，则存在内存中
+            String path = getActivity().getFilesDir().toString() + File.separator + "MyChat" + File.separator;
+            File file = new File(path);
+            if (!file.exists()){
+                // 路径不存在则创建一个文件夹
+                file.mkdir();
+            }
+            fileName = path + pictureName;
+            tempFile = new File(fileName);
+        }
+
+    }
+
+    /**
+     * 打开相册
+     */
+    public void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK);// 打开相册
+        intent.setDataAndType(MediaStore.Images.Media.INTERNAL_CONTENT_URI, "image/*");
+        intent.putExtra("output", Uri.fromFile(tempFile));
+        startActivityForResult(intent, OPEN_GALLERY_CODE);
+    }
+
+    /**
+     * 裁剪图片
+     */
+    public void cropPhoto(Uri uri) {
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        intent.setDataAndType(uri, "image/*");
+        intent.putExtra("output", Uri.fromFile(tempFile));
+        intent.putExtra("crop", true);
+        intent.putExtra("aspectX", 1);
+        intent.putExtra("aspectY", 1);
+        intent.putExtra("outputX", CROP);
+        intent.putExtra("outputY", CROP);
+        startActivityForResult(intent, CROP_PHOTO_CODE);
+    }
+
+    /**
+     * 对于Activity返回结果的处理
+     * @param requestCode 如果是 PHOTO_SELECT 则处理返回的图片；如果是
+     * @param resultCode 如果等于 RESULT_OK 则返回成功，其他情况不执行任何操作
+     * @param data Intent类型，装载有返回的数据
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if (resultCode==MainActivity.RESULT_OK){
+            switch (requestCode){
+                case OPEN_GALLERY_CODE:
+                    //Toast.makeText(getActivity(),"选择了一个图片",Toast.LENGTH_SHORT).show();
+                    cropPhoto(data.getData());
+                    break;
+
+                case CROP_PHOTO_CODE:
+                    Bitmap bitmap = BitmapFactory.decodeFile(fileName);
+                    if (bitmap != null){
+                        myAvatar.setImageBitmap(bitmap);
+                        SharedPreferences.Editor editor = settings.edit();
+                        prevSign.setText(fileName.toString());
+                        editor.putString("myAvatarPath", fileName.toString());
+                        editor.commit();
+                    }
+                    break;
+                default:break;
+            }
+        }
+
+    }
 
     private static final int SUCCESS_LINK = 11;
     private static final int FAIL_LINK = 12;

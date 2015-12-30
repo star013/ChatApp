@@ -135,7 +135,6 @@ public class ChatActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             receivedChatInfo = (ChatInfo)intent.getSerializableExtra("receivedChatInfo");
-            receivedChatInfo.setIsCome(true);
             chatInfoList.add(receivedChatInfo);
             if (chatInfoList.size()==1){
                 myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
