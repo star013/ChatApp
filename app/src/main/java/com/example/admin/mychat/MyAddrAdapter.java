@@ -55,10 +55,20 @@ public class MyAddrAdapter extends BaseAdapter {
     public void loadData(List<AddrInfo> addrInfoList){
         this.addrInfoList = addrInfoList;
     }
+
+    /**
+     * 添加一个项目
+     */
+    public void add(AddrInfo a){
+        addrInfoList.add(a);
+        notifyDataSetChanged();
+    }
     /**
      * 删除数据中的一项
      * */
     public void remove(int position){
         addrInfoList.remove(position);
+        // 更新 ListView
+        notifyDataSetChanged();
     }
 }

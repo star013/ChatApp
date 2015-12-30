@@ -95,7 +95,7 @@ public class AddressFragment extends Fragment {
          * 向 ListView 中添加数组信息 addrInfoList
          * */
         myAddrAdapter = new MyAddrAdapter(getActivity());
-        listShow();
+        iniListView();
 
         /**
          * ListView Item 点击事件：打开聊天窗口并显示聊天记录（如果有聊天记录的话）
@@ -106,17 +106,42 @@ public class AddressFragment extends Fragment {
                 AddrInfo a = addrInfoList.get(position);
                 String friend_id = a.getId();
                 String friend_name = a.getName();
-                Intent intent =new Intent(getActivity(),ChatActivity.class);
+                Intent intent = new Intent(getActivity(), ChatActivity.class);
                 /**
                  * activity 之间传递信息
                  * */
-                intent.putExtra("friend_id",friend_id);
-                intent.putExtra("friend_name",friend_name);
-                intent.putExtra("my_id",AddressFragment.this.id.toString());
+                intent.putExtra("friend_id", friend_id);
+                intent.putExtra("friend_name", friend_name);
+                intent.putExtra("my_id", AddressFragment.this.id.toString());
                 startActivity(intent);
             }
         });
 
+        /**
+         * ListView 长按删除
+         */
+        list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("是否删除好友");
+                builder.setPositiveButton("删除", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        myAddrAdapter.remove(position);
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.create().show();
+                return false;
+            }
+        });
 
         /**
          * 添加好友
@@ -168,9 +193,9 @@ public class AddressFragment extends Fragment {
     }
 
     /**
-     * 向 ListView 中添加数组信息 addrInfoList
+     * 初始化ListView 向 ListView 中添加数组信息 addrInfoList
      * */
-    void listShow(){
+    void iniListView(){
         list = (ListView) view.findViewById(R.id.friendList);
         myAddrAdapter.loadData(addrInfoList);
         list.setAdapter(myAddrAdapter);

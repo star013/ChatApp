@@ -67,7 +67,7 @@ public class SettingFragment extends Fragment {
         previd.setText("账号:"+id.toString());
 
         prevName = (TextView) view.findViewById(R.id.prevName);
-        prevName.setText("昵称:"+name.toString());
+        prevName.setText(name.toString());
 
         prevSign = (TextView) view.findViewById(R.id.prevSign);
         prevSign.setText(sign.toString());
@@ -79,6 +79,8 @@ public class SettingFragment extends Fragment {
             if (bitmap != null) {
                 myAvatar.setImageBitmap(bitmap);
             }
+        }else{
+            myAvatar.setImageResource(R.drawable.stranger_avatar);
         }
 
 

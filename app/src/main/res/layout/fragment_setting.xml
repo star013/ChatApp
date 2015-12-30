@@ -12,10 +12,32 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
         <ImageView
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
             android:id="@+id/avatar"
             android:layout_width="60dp"
             android:layout_height="60dp" />
+        <TextView
+            android:layout_toRightOf="@id/avatar"
+            android:id="@+id/prevName"
+            android:layout_width="wrap_content"
+            android:typeface="sans"
+            android:textSize="20dp"
+            android:text=""
+            android:layout_height="wrap_content"
+            />
+        <TextView
+            android:layout_toRightOf="@id/avatar"
+            android:layout_below="@id/prevName"
+            android:id="@+id/prevSign"
+            android:layout_width="wrap_content"
+            android:typeface="sans"
+            android:textSize="15dp"
+            android:text=""
+            android:layout_height="wrap_content"
+            />
     </RelativeLayout>
+
 
     <TextView
         android:id="@+id/previd"
@@ -26,31 +48,11 @@
         android:layout_height="wrap_content"
         />
 
-    <TextView
-        android:id="@+id/prevName"
-        android:layout_width="wrap_content"
-        android:typeface="sans"
-        android:textSize="20dp"
-        android:text=""
-        android:layout_height="wrap_content"
-        />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:typeface="sans"
-        android:textSize="20dp"
-        android:text="个性签名:"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        />
-
-    <TextView
-        android:id="@+id/prevSign"
-        android:layout_width="wrap_content"
-        android:typeface="sans"
-        android:textSize="20dp"
-        android:text=""
-        android:layout_height="wrap_content"
-        />
+        android:layout_weight="1"/>
 
     <Button
         android:id="@+id/logOut"
