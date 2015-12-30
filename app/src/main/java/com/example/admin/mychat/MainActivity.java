@@ -81,9 +81,9 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
         }
     }
 
-    static final int ADD_FRIEND = 1;
-    static final int TEXT_MESSAGE = 2;
-    Handler handler = new Handler(Looper.getMainLooper()){
+    private static final int ADD_FRIEND = 1;
+    private static final int TEXT_MESSAGE = 2;
+    private Handler handler = new Handler(Looper.getMainLooper()){
         @Override
         public void handleMessage(Message message) {
             switch (message.what){

@@ -20,20 +20,20 @@ public class AddrInfo implements Serializable{
         this.name = name;
     }
 
-    String getId(){
+    public String getId(){
         return id;
     }
-    String getName(){
+    public String getName(){
         return name;
     }
-    String getSign(){
+    public String getSign(){
         return sign;
     }
 
-    void setSign(String sign){
+    synchronized public void setSign(String sign){
         this.sign = sign;
     }
-    void setName(String name){
+    synchronized public void setName(String name){
         this.name = name;
     }
 }

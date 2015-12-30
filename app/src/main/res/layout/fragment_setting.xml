@@ -52,23 +52,6 @@
         android:layout_gravity="bottom"/>
 
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:typeface="sans"
-        android:textSize="20dp"
-        android:text="修改昵称:"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        />
-
-    <EditText
-        android:id="@+id/newName"
-        android:hint="请输入新的昵称"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        />
-
 
     <Button
         android:id="@+id/setName"
@@ -81,22 +64,6 @@
         android:layout_gravity="bottom"
         />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:typeface="sans"
-        android:textSize="20dp"
-        android:text="修改个性签名:"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        />
-
-    <EditText
-        android:id="@+id/newSign"
-        android:hint="请输入新的个性签名"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        />
 
 
     <Button
@@ -108,6 +75,15 @@
         android:background="@drawable/button_green"
         android:textColor="#ffffff"
         android:layout_gravity="bottom"
+        />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/setAvatar"
+        android:background="@drawable/button_blue"
+        android:text="设置头像"
+        android:textColor="#ffffff"
         />
 
 

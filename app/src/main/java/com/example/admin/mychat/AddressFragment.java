@@ -176,13 +176,13 @@ public class AddressFragment extends Fragment {
         list.setAdapter(myAddrAdapter);
     }
 
-    static final int SUCCESS_LINK = 1;
-    static final int FAIL_LINK = 2;
-    static final int WRONG_LINK = 3;
+    private static final int SUCCESS_LINK = 21;
+    private static final int FAIL_LINK = 22;
+    private static final int WRONG_LINK = 23;
     /**
      * 处理网络线程的消息
      * */
-    Handler mHandler = new Handler(Looper.getMainLooper()) {
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message message) {
             String info = (String)message.obj;

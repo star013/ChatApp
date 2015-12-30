@@ -40,8 +40,12 @@ public class MyChatAdapter extends BaseAdapter {
         return position;
     }
 
+    /**
+     * 更新 ListView 中的每一项
+     * @param convertView 表示上一次使用过的View，用setTag()保存，用getTag()提取上一次项的信息
+     */
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    synchronized public View getView(int position, View convertView, ViewGroup parent) {
         ChatInfo a = chatInfoList.get(position);
         ViewHolder viewHolder = null;
         if (convertView==null){
@@ -58,9 +62,24 @@ public class MyChatAdapter extends BaseAdapter {
             convertView.setTag(viewHolder);
         }else {
             viewHolder = (ViewHolder)convertView.getTag();
+            // 如果旧的信息和新的信息不同
+            if (viewHolder.isCome != a.getIsCome()){
+                if (a.getIsCome()){
+                    // 消息是对方发过来的
+                    convertView = layoutInflater.inflate(R.layout.chat_text_left,null);
+                }else{
+                    convertView = layoutInflater.inflate(R.layout.chat_text_right,null);
+                }
+                viewHolder = new ViewHolder();
+                viewHolder.time = (TextView) convertView.findViewById(R.id.tv_sendtime);
+                viewHolder.content = (TextView) convertView.findViewById(R.id.tv_chatcontent);
+                viewHolder.isCome = a.getIsCome();
+                convertView.setTag(viewHolder);
+            }
         }
         viewHolder.time.setText(a.getDate());
         viewHolder.content.setText(a.getText());
+
 
         return convertView;
     }
@@ -73,4 +92,5 @@ public class MyChatAdapter extends BaseAdapter {
         public TextView content;
         public boolean isCome;
     }
+
 }

@@ -135,6 +135,7 @@ public class ChatActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             receivedChatInfo = (ChatInfo)intent.getSerializableExtra("receivedChatInfo");
+            receivedChatInfo.setIsCome(true);
             chatInfoList.add(receivedChatInfo);
             if (chatInfoList.size()==1){
                 myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
@@ -176,6 +177,7 @@ public class ChatActivity extends Activity {
 
                 case SUCCESS_LINK_FRIEND:
                     //Toast.makeText(ChatActivity.this,"succeed send",Toast.LENGTH_SHORT).show();
+                    et_content.setText("");
                     chatInfoList.add(sendingChatInfo);
                     if (chatInfoList.size()==1){
                         myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
@@ -198,7 +200,7 @@ public class ChatActivity extends Activity {
         /**
          * 获取时间
          * */
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd  hh:mm");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd  hh:mm:ss");
         String date = simpleDateFormat.format(new Date());
         sendingChatInfo = new ChatInfo(date,send_info,false);
     }

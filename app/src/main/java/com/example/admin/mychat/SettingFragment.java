@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,8 +63,6 @@ public class SettingFragment extends Fragment {
         prevSign = (TextView) view.findViewById(R.id.prevSign);
         prevSign.setText(sign.toString());
 
-        newName = (EditText) view.findViewById(R.id.newName);
-        newSign = (EditText) view.findViewById(R.id.newSign);
 
         /**
          * 退出登录
@@ -94,21 +93,45 @@ public class SettingFragment extends Fragment {
         });
 
         /**
-         * 重置昵称
+         * 修改昵称
          * */
         Button setName = (Button) view.findViewById(R.id.setName);
         setName.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("修改昵称");
+                builder.setMessage("请输入新的昵称：");
+                // 放置输入栏
+                newName = new EditText(getActivity());
                 CharSequence newNameStr = newName.getText();
-                if (newNameStr.length()<10){
-                    SharedPreferences.Editor editor = settings.edit();
-                    prevName.setText("昵称:"+newNameStr.toString());
-                    editor.putString("name", newNameStr.toString());
-                    editor.commit();
-                }else{
-                    Toast.makeText(getActivity(),"您输入的昵称过长\n请输入长度小于10个字符的昵称",Toast.LENGTH_SHORT).show();
-                }
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT);
+                newName.setLayoutParams(lp);
+                builder.setView(newName);
+
+                builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        CharSequence newNameStr = newName.getText();
+                        if (newNameStr.length()<10){
+                            SharedPreferences.Editor editor = settings.edit();
+                            prevName.setText("昵称:"+newNameStr.toString());
+                            editor.putString("name", newNameStr.toString());
+                            editor.commit();
+                        }else{
+                            Toast.makeText(getActivity(),"您输入的昵称过长\n请输入长度小于10个字符的昵称",Toast.LENGTH_SHORT).show();
+                        }
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.create().show();
+
 
             }
         });
@@ -120,15 +143,38 @@ public class SettingFragment extends Fragment {
         setSign.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                CharSequence newSignStr = newSign.getText();
-                if (newSignStr.length()<20){
-                    SharedPreferences.Editor editor = settings.edit();
-                    prevSign.setText(newSignStr.toString());
-                    editor.putString("sign", newSignStr.toString());
-                    editor.commit();
-                }else{
-                    Toast.makeText(getActivity(),"您输入的个性签名过长\n请输入长度小于20个字符的个性签名",Toast.LENGTH_SHORT).show();
-                }
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("修改个性签名");
+                builder.setMessage("请输入新的个性签名：");
+                // 放置输入栏
+                newSign = new EditText(getActivity());
+                CharSequence newNameStr = newSign.getText();
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT);
+                newSign.setLayoutParams(lp);
+                builder.setView(newSign);
+
+                builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        CharSequence newSignStr = newSign.getText();
+                        if (newSignStr.length()<20){
+                            SharedPreferences.Editor editor = settings.edit();
+                            prevSign.setText(newSignStr.toString());
+                            editor.putString("sign", newSignStr.toString());
+                            editor.commit();
+                        }else{
+                            Toast.makeText(getActivity(),"您输入的个性签名过长\n请输入长度小于20个字符的个性签名",Toast.LENGTH_SHORT).show();
+                        }
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.create().show();
 
             }
         });
@@ -137,12 +183,12 @@ public class SettingFragment extends Fragment {
     }
 
 
-    static final int SUCCESS_LINK = 1;
-    static final int FAIL_LINK = 2;
+    private static final int SUCCESS_LINK = 11;
+    private static final int FAIL_LINK = 12;
     /**
      * 处理网络线程的消息
      * */
-    Handler mHandler = new Handler(Looper.getMainLooper()) {
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message message) {
             String info = (String)message.obj;
