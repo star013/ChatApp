@@ -135,7 +135,7 @@ public class SettingFragment extends Fragment {
                         CharSequence newNameStr = newName.getText();
                         if (newNameStr.length()<10){
                             SharedPreferences.Editor editor = settings.edit();
-                            prevName.setText("昵称:"+newNameStr.toString());
+                            prevName.setText("昵称:" + newNameStr.toString());
                             editor.putString("name", newNameStr.toString());
                             editor.commit();
                         }else{
@@ -206,7 +206,7 @@ public class SettingFragment extends Fragment {
         setAvatar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                initFile("avatar.bmp");
+                initFile(id.toString());
                 openGallery();
             }
         });
@@ -229,7 +229,7 @@ public class SettingFragment extends Fragment {
     public void initFile(String pictureName) {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             // 如果SD卡存在，则存在SD卡中
-            String path = Environment.getExternalStorageDirectory() + File.separator + "MyChat" + File.separator;
+            String path = Environment.getExternalStorageDirectory() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator;
             File file = new File(path);
             if (!file.exists()){
                 // 路径不存在则创建一个文件夹
@@ -239,7 +239,7 @@ public class SettingFragment extends Fragment {
             tempFile = new File(fileName);
         }else{
             // 如果SD卡不存在，则存在内存中
-            String path = getActivity().getFilesDir().toString() + File.separator + "MyChat" + File.separator;
+            String path = getActivity().getFilesDir().toString() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator;
             File file = new File(path);
             if (!file.exists()){
                 // 路径不存在则创建一个文件夹
@@ -296,7 +296,6 @@ public class SettingFragment extends Fragment {
                     if (bitmap != null){
                         myAvatar.setImageBitmap(bitmap);
                         SharedPreferences.Editor editor = settings.edit();
-                        prevSign.setText(fileName.toString());
                         editor.putString("myAvatarPath", fileName.toString());
                         editor.commit();
                     }

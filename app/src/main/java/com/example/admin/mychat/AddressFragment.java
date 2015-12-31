@@ -63,10 +63,10 @@ public class AddressFragment extends Fragment {
 
         settings = this.getActivity().getSharedPreferences("setting", 0);
         id = settings.getString("id", "");
-        name = settings.getString("name", "暂时没有昵称");
         ipStr = settings.getString("ip", "166.111.140.14");
         portStr = settings.getString("port","8000");
         sign = settings.getString("sign","暂时没有个性签名");
+        name = settings.getString("name", "暂时没有昵称");
         myAvatarPath = settings.getString("myAvatarPath",null);
 
         /**
@@ -120,6 +120,7 @@ public class AddressFragment extends Fragment {
                 intent.putExtra("friend_id", friend_id);
                 intent.putExtra("friend_name", friend_name);
                 intent.putExtra("my_id", AddressFragment.this.id.toString());
+                intent.putExtra("main_path",getActivity().getFilesDir().toString() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator);
                 startActivity(intent);
             }
         });
@@ -181,7 +182,7 @@ public class AddressFragment extends Fragment {
                 builder.setPositiveButton("添加", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        new Thread(new ConnectServer()).start();
+                        new Thread(new AskFriendOnServer()).start();
                         dialog.dismiss();
                     }
                 });
@@ -234,7 +235,7 @@ public class AddressFragment extends Fragment {
                 case SUCCESS_LINK:
                     friend_ip = (String)message.obj;
                     //Toast.makeText(getActivity(),friend_ip,Toast.LENGTH_SHORT).show();
-                    new Thread(new AddNewFriend()).start();
+                    new Thread(new SendToNewFriend()).start();
                     break;
 
                 case FAIL_LINK:
@@ -256,7 +257,7 @@ public class AddressFragment extends Fragment {
     /**
      * 开启新线程处理网络连接
      * */
-    private class ConnectServer implements Runnable{
+    private class AskFriendOnServer implements Runnable{
         public void run() {
             try {
                 Socket socket = new Socket(ipStr.toString(), Integer.parseInt(portStr.toString()));
@@ -305,7 +306,7 @@ public class AddressFragment extends Fragment {
     /**
      * 包装好要发送的信息 sendingAddrInfo
      * */
-    private void warpUpSendAddrInfo(){
+    private void wrapUpSendAddrInfo(){
         Bitmap bitmap = null;
         // 加载头像
         if (myAvatarPath!=null){
@@ -314,17 +315,20 @@ public class AddressFragment extends Fragment {
             Resources resources = getResources();
             bitmap = BitmapFactory.decodeResource(resources,R.drawable.stranger_avatar);
         }
-        sendingAddrInfo = new AddrInfo(id.toString(),name.toString(),sign.toString(),bitmap);
+        // 签名 和 昵称有可能更新
+        sign = settings.getString("sign","暂时没有个性签名");
+        name = settings.getString("name", "暂时没有昵称");
+        sendingAddrInfo = new AddrInfo(id.toString(),name.toString(),sign.toString(),bitmap,"");
     }
     /**
      * 向已经获得 IP 地址的好友发送添加信息
      */
-    private class AddNewFriend implements Runnable{
+    private class SendToNewFriend implements Runnable{
         @Override
         public void run() {
             Message message = Message.obtain();
             // 包装好要发送的信息 sendingAddrInfo
-            warpUpSendAddrInfo();
+            wrapUpSendAddrInfo();
             try {
                 Socket socket = new Socket(friend_ip, 8000);
                 ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());

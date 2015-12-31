@@ -1,12 +1,19 @@
 package com.example.admin.mychat;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.List;
 
 /**
@@ -42,11 +49,19 @@ public class MyAddrAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         convertView = layoutInflater.inflate(R.layout.list_item_friend_addr,null);
+        ImageView imageView = (ImageView) convertView.findViewById(R.id.itemImage);
         TextView title = (TextView) convertView.findViewById(R.id.itemTitle);
         TextView text = (TextView) convertView.findViewById(R.id.itemText);
         AddrInfo a = addrInfoList.get(position);
+
         title.setText(a.getName());
         text.setText(a.getSign());
+        Bitmap bitmap = BitmapFactory.decodeFile(a.getAvatar_path());
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap);
+        }else{
+            imageView.setImageResource(R.drawable.stranger_avatar);
+        }
         return convertView;
     }
     /**

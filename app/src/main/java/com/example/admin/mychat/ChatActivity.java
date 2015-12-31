@@ -7,10 +7,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -51,11 +53,25 @@ public class ChatActivity extends Activity {
     String send_info;
     ChatInfo sendingChatInfo = null;
     ChatInfo receivedChatInfo = null;
+    String my_avatar_path,friend_avatar_path;
+
+    void setAvatarPath(String main_path){
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            // 如果SD卡存在，则存在SD卡中
+            my_avatar_path = Environment.getExternalStorageDirectory() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator + my_id;
+            friend_avatar_path = Environment.getExternalStorageDirectory() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator + friend_id;
+        }else{
+            // 如果SD卡不存在，则存在内存中
+            my_avatar_path = main_path + my_id;
+            friend_avatar_path = main_path + friend_id;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
         bt_send = (Button)findViewById(R.id.bt_send);
         et_content = (EditText)findViewById(R.id.et_send);
         /**
@@ -67,6 +83,8 @@ public class ChatActivity extends Activity {
         getActionBar().setTitle(friend_name);
         my_id = intent.getStringExtra("my_id");
         //Toast.makeText(this,my_id,Toast.LENGTH_SHORT).show();
+        String main_path = intent.getStringExtra("main_path");
+        setAvatarPath(main_path);
 
         /**
          * 打开已有的聊天记录
@@ -93,7 +111,7 @@ public class ChatActivity extends Activity {
         //chatInfoList.add(new ChatInfo("2","jin", false));
         //Toast.makeText(this,"list size="+String.valueOf(chatInfoList.size()),Toast.LENGTH_SHORT).show();
         if (chatInfoList.size()>0){
-            myChatAdapter = new MyChatAdapter(this,chatInfoList);
+            myChatAdapter = new MyChatAdapter(this,chatInfoList,friend_avatar_path,my_avatar_path);
             list.setAdapter(myChatAdapter);
         }
 
@@ -127,6 +145,31 @@ public class ChatActivity extends Activity {
     }
 
     /**
+     * 为 ActionBar 扩展菜单项
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_chat, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    /**
+     * 处理 ActionBar 动作按钮的点击事件
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // 处理动作按钮的点击事件
+        switch (item.getItemId()) {
+            case R.id.sendFile:
+                Toast.makeText(this,"发送文件",Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
      * 处理接收到的广播的信息
      * 处理文字信息
      */
@@ -137,7 +180,7 @@ public class ChatActivity extends Activity {
             receivedChatInfo = (ChatInfo)intent.getSerializableExtra("receivedChatInfo");
             chatInfoList.add(receivedChatInfo);
             if (chatInfoList.size()==1){
-                myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
+                myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList,friend_avatar_path,my_avatar_path);
                 list.setAdapter(myChatAdapter);
             }else{
                 myChatAdapter.notifyDataSetChanged();
@@ -179,7 +222,7 @@ public class ChatActivity extends Activity {
                     et_content.setText("");
                     chatInfoList.add(sendingChatInfo);
                     if (chatInfoList.size()==1){
-                        myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList);
+                        myChatAdapter = new MyChatAdapter(ChatActivity.this,chatInfoList,friend_avatar_path,my_avatar_path);
                         list.setAdapter(myChatAdapter);
                     }else{
                         myChatAdapter.notifyDataSetChanged();
@@ -195,7 +238,7 @@ public class ChatActivity extends Activity {
     /**
      * 包装好要发送的信息 sendingChatInfo
      * */
-    void warpUpSendMessage(){
+    void wrapUpSendMessage(){
         /**
          * 获取时间
          * */
@@ -262,7 +305,7 @@ public class ChatActivity extends Activity {
         public void run() {
             Message message = Message.obtain();
             // 包装好要发送的信息 sendingChatInfo
-            warpUpSendMessage();
+            wrapUpSendMessage();
             try {
                 Socket socket = new Socket(friend_ip, 8000);
                 ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());

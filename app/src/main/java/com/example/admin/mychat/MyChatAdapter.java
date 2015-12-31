@@ -1,10 +1,13 @@
 package com.example.admin.mychat;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -19,10 +22,14 @@ import java.util.List;
 public class MyChatAdapter extends BaseAdapter {
     private LayoutInflater layoutInflater;
     private List<ChatInfo> chatInfoList;
+    private String friend_avatar_path;
+    private String my_avatar_path;
 
-    public MyChatAdapter(Context context,List<ChatInfo> chatInfoList){
+    public MyChatAdapter(Context context,List<ChatInfo> chatInfoList,String friend_avatar_path,String my_avatar_path){
         this.layoutInflater = LayoutInflater.from(context);
         this.chatInfoList = chatInfoList;
+        this.friend_avatar_path = friend_avatar_path;
+        this.my_avatar_path = my_avatar_path;
     }
 
     @Override
@@ -48,14 +55,20 @@ public class MyChatAdapter extends BaseAdapter {
     synchronized public View getView(int position, View convertView, ViewGroup parent) {
         ChatInfo a = chatInfoList.get(position);
         ViewHolder viewHolder = null;
+        Bitmap bitmap = null;
         if (convertView==null){
+            viewHolder = new ViewHolder();
             if (a.getIsCome()){
                 // 消息是对方发过来的
                 convertView = layoutInflater.inflate(R.layout.chat_text_left,null);
+                bitmap = BitmapFactory.decodeFile(friend_avatar_path);
+                viewHolder.avatar = (ImageView) convertView.findViewById(R.id.friend_avatar);
             }else{
                 convertView = layoutInflater.inflate(R.layout.chat_text_right,null);
+                bitmap = BitmapFactory.decodeFile(my_avatar_path);
+                viewHolder.avatar = (ImageView) convertView.findViewById(R.id.my_avatar);
             }
-            viewHolder = new ViewHolder();
+            viewHolder.avatar.setImageBitmap(bitmap);
             viewHolder.time = (TextView) convertView.findViewById(R.id.tv_sendtime);
             viewHolder.content = (TextView) convertView.findViewById(R.id.tv_chatcontent);
             viewHolder.isCome = a.getIsCome();
@@ -64,13 +77,18 @@ public class MyChatAdapter extends BaseAdapter {
             viewHolder = (ViewHolder)convertView.getTag();
             // 如果旧的信息和新的信息不同
             if (viewHolder.isCome != a.getIsCome()){
+                viewHolder = new ViewHolder();
                 if (a.getIsCome()){
                     // 消息是对方发过来的
-                    convertView = layoutInflater.inflate(R.layout.chat_text_left,null);
+                    convertView = layoutInflater.inflate(R.layout.chat_text_left, null);
+                    bitmap = BitmapFactory.decodeFile(friend_avatar_path);
+                    viewHolder.avatar = (ImageView) convertView.findViewById(R.id.friend_avatar);
                 }else{
-                    convertView = layoutInflater.inflate(R.layout.chat_text_right,null);
+                    convertView = layoutInflater.inflate(R.layout.chat_text_right, null);
+                    bitmap = BitmapFactory.decodeFile(my_avatar_path);
+                    viewHolder.avatar = (ImageView) convertView.findViewById(R.id.my_avatar);
                 }
-                viewHolder = new ViewHolder();
+                viewHolder.avatar.setImageBitmap(bitmap);
                 viewHolder.time = (TextView) convertView.findViewById(R.id.tv_sendtime);
                 viewHolder.content = (TextView) convertView.findViewById(R.id.tv_chatcontent);
                 viewHolder.isCome = a.getIsCome();
@@ -91,6 +109,7 @@ public class MyChatAdapter extends BaseAdapter {
         public TextView time;
         public TextView content;
         public boolean isCome;
+        public ImageView avatar;
     }
 
 }

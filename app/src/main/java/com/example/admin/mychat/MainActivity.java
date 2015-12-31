@@ -2,8 +2,12 @@ package com.example.admin.mychat;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -26,9 +30,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,13 +96,29 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 
     private static final int ADD_FRIEND = 1;
     private static final int TEXT_MESSAGE = 2;
+    private static final int FILE_MESSAGE = 3;
+    private static final int REPLY_ADD_FRIEND = 5;
+    private static final int WRONG_LINK = 6;
+    private static final int FAIL_LINK = 7;
+    private static final int FAIL_LINK_FRIEND = 8;
+    private static final int SUCCESS_LINK = 9;
     private Handler handler = new Handler(Looper.getMainLooper()){
         @Override
         public void handleMessage(Message message) {
             switch (message.what){
                 case ADD_FRIEND:
-                    Toast.makeText(getApplicationContext(),receivedAddrInfo.getId(),Toast.LENGTH_SHORT).show();
-                    Toast.makeText(getApplicationContext(),receivedAddrInfo.getName(),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(),receivedAddrInfo.getId(),Toast.LENGTH_SHORT).show();
+                    // 更新界面
+                    AddFriendandRefreshAddrFragment();
+                    // 包装要发送的消息
+                    wrapUpSendAddrInfo();
+                    // 发起 IP 查询
+                    new Thread(new AskFriendOnServer(receivedAddrInfo.getId())).start();
+                    break;
+
+                case REPLY_ADD_FRIEND:
+                    //Toast.makeText(getApplicationContext(),"收到："+receivedAddrInfo.getId(),Toast.LENGTH_SHORT).show();
+                    // 更新界面
                     AddFriendandRefreshAddrFragment();
                     break;
 
@@ -109,9 +132,17 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                     receivedChatInfo.setIsCome(true);
                     Intent intent = new Intent(receivedID);
                     Bundle bundle=new Bundle();
-                    bundle.putSerializable("receivedChatInfo",receivedChatInfo);
+                    bundle.putSerializable("receivedChatInfo", receivedChatInfo);
                     intent.putExtras(bundle);
                     MainActivity.this.sendBroadcast(intent);
+                    break;
+
+                case SUCCESS_LINK:
+                    // 向对方发送自己的用户信息
+                    String friend_ip = (String)message.obj;
+                    //Toast.makeText(getActivity(),friend_ip,Toast.LENGTH_SHORT).show();
+                    new Thread(new SendToNewFriend(friend_ip)).start();
+                    break;
                 default:break;
             }
         }
@@ -145,6 +176,16 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 
                 /**
                  * 当接收到的信息是
+                 * 回复请求添加好友
+                 * */
+                if (msg.equals("REPLY_ADD_FRIEND")){
+                    receivedAddrInfo = (AddrInfo)objIn.readObject();
+                    message.what = REPLY_ADD_FRIEND;
+                    handler.sendMessage(message);
+                }
+
+                /**
+                 * 当接收到的信息是
                  * 文字消息
                  * */
                 if (msg.equals("TEXT_MESSAGE")){
@@ -172,7 +213,48 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
         }
     }
 
+    /**
+     * 向 AddressFragment 添加元素
+     */
     void AddFriendandRefreshAddrFragment(){
+        // 先把图片保存到文件夹中，并将AddrInfo的路径项配置正确，同时删除图片，节约内存
+        Bitmap bitmap = receivedAddrInfo.getAvatar();
+        String friend_id = receivedAddrInfo.getId();
+        String path = null;
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            // 如果SD卡存在，则存在SD卡中
+            path = Environment.getExternalStorageDirectory() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator+friend_id;
+            //Toast.makeText(this,"SD:"+path,Toast.LENGTH_LONG).show();
+        }else{
+            // 如果SD卡不存在，则存在内存中
+            path = this.getFilesDir().toString() + File.separator + "MyChat" + File.separator + "Avatar" + File.separator+friend_id;
+            //Toast.makeText(this,"Mem:"+path,Toast.LENGTH_LONG).show();
+        }
+        // 配置路径项，同时删除图片
+        receivedAddrInfo.setAvatar(null);
+        receivedAddrInfo.setAvatar_path(path);
+
+        // 保存图片到指定位置
+        File bitmapFile = new File(path);
+        if (bitmapFile.exists()){
+            bitmapFile.delete();
+        }
+        /**
+         * Bitmap 不可序列化
+         * 可以直接用文件保存
+         */
+        try {
+            bitmapFile.createNewFile();
+            FileOutputStream fos = new FileOutputStream(bitmapFile);
+            bitmap.compress(Bitmap.CompressFormat.PNG,0,fos);
+            fos.flush();
+            fos.close();
+            //Toast.makeText(this,"bitmap height = "+String.valueOf(bitmap.getHeight()),Toast.LENGTH_LONG).show();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        //Toast.makeText(this,path,Toast.LENGTH_SHORT).show();
         File file = new File(this.getFilesDir(),"address.txt");
         List<AddrInfo> addrInfoList = null;
         try {
@@ -187,7 +269,24 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
         if (addrInfoList == null){
             addrInfoList = new ArrayList<AddrInfo>();
         }
-        addrInfoList.add(receivedAddrInfo);
+        // 先查找有无重复 ID， 如果没有则添加新的，如果有则更新
+        if (addrInfoList.size()==0){
+            addrInfoList.add(receivedAddrInfo);
+        }else {
+            boolean repeat = false;
+            for (int i=0; i<addrInfoList.size(); i++){
+                AddrInfo a = addrInfoList.get(i);
+                if (a.getId().equals(friend_id)){
+                    repeat = true;
+                    a.setName(receivedAddrInfo.getName());
+                    a.setSign(receivedAddrInfo.getSign());
+                    break;
+                }
+                if (!repeat){
+                    addrInfoList.add(receivedAddrInfo);
+                }
+            }
+        }
         try {
             ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(file));
             objOut.writeObject(addrInfoList);
@@ -201,6 +300,120 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
             ft.detach(addressFragment);
             ft.attach(addressFragment);
             ft.commit();
+        }
+    }
+
+
+    /**
+     * 开启新线程处理网络连接
+     * */
+    private class AskFriendOnServer implements Runnable{
+        private String friend_id;
+
+        public AskFriendOnServer(String friend_id){
+            this.friend_id = friend_id;
+        }
+        public void run() {
+            String ipStr = settings.getString("ip", "166.111.140.14");
+            String portStr = settings.getString("port","8000");
+            try {
+                Socket socket = new Socket(ipStr.toString(), Integer.parseInt(portStr.toString()));
+                OutputStream os = socket.getOutputStream();
+                PrintStream out = new PrintStream(os,true,"US-ASCII");
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(),"US-ASCII"));
+
+                String sendInfo = "q"+friend_id;
+                out.print(sendInfo);
+                os.write((byte)0);
+
+                char[] bytes = new char[50];
+                int length = in.read(bytes);
+
+                String rcv = new String(bytes);
+                // 截取有意义的一段
+                String rcvtrim = rcv.substring(0,length);
+
+                out.close();
+                in.close();
+                socket.close();
+
+                Message message = Message.obtain();
+                message.obj = rcvtrim;
+                if (rcvtrim.equals("n")) {
+                    message.what = FAIL_LINK;
+                } else if (rcvtrim.equals("Incorrect No.") || rcvtrim.equals("Please send the correct message.")){
+                    message.what = WRONG_LINK;
+                } else {
+                    message.what = SUCCESS_LINK;
+                }
+                handler.sendMessage(message);
+
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    // 发送回去的自己的消息
+    AddrInfo sendingAddrInfo = null;
+    String myAvatarPath;
+    /**
+     * 包装好要发送的信息 sendingAddrInfo
+     * */
+    private void wrapUpSendAddrInfo(){
+        Bitmap bitmap = null;
+        myAvatarPath = settings.getString("myAvatarPath",null);
+        // 加载头像
+        if (myAvatarPath!=null){
+            bitmap = BitmapFactory.decodeFile(myAvatarPath);
+        }else {
+            Resources resources = getResources();
+            bitmap = BitmapFactory.decodeResource(resources,R.drawable.stranger_avatar);
+        }
+        // 签名 和 昵称有可能更新
+        String id = settings.getString("id","");
+        String sign = settings.getString("sign","暂时没有个性签名");
+        String name = settings.getString("name", "暂时没有昵称");
+        sendingAddrInfo = new AddrInfo(id.toString(),name.toString(),sign.toString(),bitmap,"");
+    }
+    /**
+     * 向已经获得 IP 地址的好友发送添加信息
+     */
+    private class SendToNewFriend implements Runnable{
+        private String friend_ip;
+        public SendToNewFriend(String friend_ip){
+            this.friend_ip = friend_ip;
+        }
+        @Override
+        public void run() {
+            Message message = Message.obtain();
+            // 包装好要发送的信息 sendingAddrInfo
+            wrapUpSendAddrInfo();
+            try {
+                Socket socket = new Socket(friend_ip, 8000);
+                ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());
+                // 回复添加好友请求 标识符
+                String str = new String("REPLY_ADD_FRIEND");
+                objOut.writeObject(str);
+                // 聊天消息对象
+                objOut.writeObject(sendingAddrInfo);
+
+                objOut.close();
+                socket.close();
+            } catch (UnknownHostException e) {
+                message.what = FAIL_LINK_FRIEND;
+                message.obj = "UnknownHostException";
+                handler.sendMessage(message);
+                e.printStackTrace();
+            } catch (IOException e) {
+                message.what = FAIL_LINK_FRIEND;
+                message.obj = "IOException";
+                handler.sendMessage(message);
+                e.printStackTrace();
+            }
         }
     }
 
