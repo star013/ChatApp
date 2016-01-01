@@ -5,9 +5,9 @@ import android.graphics.Bitmap;
 import java.io.Serializable;
 
 /**
+ * 记录好友列表每一项，id，姓名，个性签名，以及头像位置
+ * 序列化，便于头像文件的传输
  * Created by admin on 2015/12/26.
- * 记录好友列表每一项，id，姓名，个性签名
- * 也可以是聊天列表，把个性签名项用最后一个聊天对话代替
  */
 public class AddrInfo implements Serializable{
     private String id;

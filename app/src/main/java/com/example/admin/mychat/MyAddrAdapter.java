@@ -17,8 +17,9 @@ import java.io.ObjectInputStream;
 import java.util.List;
 
 /**
- * Created by admin on 2015/12/26.
  * 为了配合 ListView 的使用和自定义的 ArrayList 能够衔接
+ * 便于显示通讯录的列表
+ * Created by admin on 2015/12/26.
  */
 public class MyAddrAdapter extends BaseAdapter {
     private LayoutInflater layoutInflater;

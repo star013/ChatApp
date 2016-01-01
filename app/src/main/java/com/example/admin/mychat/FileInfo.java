@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * 用来实现文件的传输
+ * 用来实现文件的传输，可以序列化，用传输对象的流来传输
  * Created by admin on 2016/1/1.
  */
 public class FileInfo implements Serializable{

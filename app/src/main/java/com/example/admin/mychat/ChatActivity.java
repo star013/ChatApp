@@ -44,6 +44,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 实现聊天界面
+ * 具有发送和接收文字信息，发送文件的功能
+ * 有头像以及气泡聊天
+ * 有后退键可以回到程序主界面
+ */
 public class ChatActivity extends Activity {
     ListView list;
     MyChatAdapter myChatAdapter;

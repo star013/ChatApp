@@ -45,7 +45,12 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * 通讯录部分
+ * 通讯录界面
+ * 主要功能：
+ * 添加好友
+ * 更新好友信息
+ * 删除好友，删除好友需要长按好友项，会弹出对话框
+ * 点击好友项，可以弹出对话界面，进行对话
  */
 public class AddressFragment extends Fragment {
     CharSequence id,name,ipStr,portStr,sign;

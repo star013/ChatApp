@@ -23,6 +23,11 @@ import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 登录界面
+ * 输入用户名和密码，密码的外观和正常的密码一样
+ * 可以修改服务器的 IP 地址和端口，便于更改
+ */
 public class Login extends Activity implements View.OnClickListener{
     CharSequence ipStr,portStr,idStr,pwdStr;
     Button blogin,bset;

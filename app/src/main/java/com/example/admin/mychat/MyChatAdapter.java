@@ -16,8 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by admin on 2015/12/26.
  * 为了配合 ListView 的使用和自定义的 ArrayList 能够衔接
+ * 便于显示聊天界面中的对话列表
+ * Created by admin on 2015/12/26.
  */
 public class MyChatAdapter extends BaseAdapter {
     private LayoutInflater layoutInflater;

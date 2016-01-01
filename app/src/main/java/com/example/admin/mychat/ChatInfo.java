@@ -3,8 +3,10 @@ package com.example.admin.mychat;
 import java.io.Serializable;
 
 /**
- * Created by admin on 2015/12/26.
  * 聊天记录的每一句话的记录格式
+ * 尤其是区分消息是接收到的还是发送的
+ * 便于适配器进行显示
+ * Created by admin on 2015/12/26.
  */
 public class ChatInfo implements Serializable{
     private String date;

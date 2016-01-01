@@ -39,6 +39,12 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 主函数，负责生成3个 Fragment
+ * 开启服务端，监听来自中央服务器或朋友的信息
+ * 接收各种信息，如中央服务器回传的应答，朋友发送的文字信息、文件，添加好友请求等
+ * 将接收到的各种信息分别进行处理
+ */
 public class MainActivity extends FragmentActivity implements OnClickListener {
     SharedPreferences settings;
     // 底部菜单3个Linearlayout

@@ -35,7 +35,11 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 /**
- * 设置部分
+ * 设置界面
+ * 主要功能：
+ * 修改昵称、个性签名
+ * 更换头像
+ * 退出登录
  */
 public class SettingFragment extends Fragment {
     CharSequence id,name,ipStr,portStr,sign;
