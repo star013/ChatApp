@@ -135,7 +135,7 @@ public class SettingFragment extends Fragment {
                         CharSequence newNameStr = newName.getText();
                         if (newNameStr.length()<10){
                             SharedPreferences.Editor editor = settings.edit();
-                            prevName.setText("昵称:" + newNameStr.toString());
+                            prevName.setText(newNameStr.toString());
                             editor.putString("name", newNameStr.toString());
                             editor.commit();
                         }else{

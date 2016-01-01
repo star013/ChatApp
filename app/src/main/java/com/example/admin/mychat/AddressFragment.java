@@ -48,7 +48,7 @@ import java.util.List;
  * 通讯录部分
  */
 public class AddressFragment extends Fragment {
-    CharSequence id,name,friendIDstr,ipStr,portStr,sign;
+    CharSequence id,name,ipStr,portStr,sign;
     SharedPreferences settings;
     EditText friendID;
     ListView list;
@@ -182,7 +182,8 @@ public class AddressFragment extends Fragment {
                 builder.setPositiveButton("添加", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        new Thread(new AskFriendOnServer()).start();
+                        CharSequence friendIDstr = friendID.getText();
+                        new Thread(new AskFriendOnServer(friendIDstr.toString())).start();
                         dialog.dismiss();
                     }
                 });
@@ -204,8 +205,21 @@ public class AddressFragment extends Fragment {
         refreshFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int i = Integer.parseInt("0123");
-                Toast.makeText(getActivity(),String.valueOf(i),Toast.LENGTH_SHORT).show();
+                if (addrInfoList.size()>0){
+                    for (int i=0; i<addrInfoList.size();i++){
+                        Toast.makeText(getActivity(),"正在刷新第"+String.valueOf(i+1)+"个联系人",Toast.LENGTH_SHORT).show();
+                        AddrInfo a = addrInfoList.get(i);
+                        String friendIDstr = a.getId();
+                        Thread temp = new Thread(new AskFriendOnServer(friendIDstr));
+                        temp.start();
+                        try {
+                            temp.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    Toast.makeText(getActivity(),"刷新完毕",Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -235,7 +249,7 @@ public class AddressFragment extends Fragment {
                 case SUCCESS_LINK:
                     friend_ip = (String)message.obj;
                     //Toast.makeText(getActivity(),friend_ip,Toast.LENGTH_SHORT).show();
-                    new Thread(new SendToNewFriend()).start();
+                    new Thread(new SendToNewFriend(friend_ip)).start();
                     break;
 
                 case FAIL_LINK:
@@ -258,6 +272,10 @@ public class AddressFragment extends Fragment {
      * 开启新线程处理网络连接
      * */
     private class AskFriendOnServer implements Runnable{
+        private String friendIDstr;
+        public AskFriendOnServer(String friendIDstr){
+            this.friendIDstr = friendIDstr;
+        }
         public void run() {
             try {
                 Socket socket = new Socket(ipStr.toString(), Integer.parseInt(portStr.toString()));
@@ -265,7 +283,6 @@ public class AddressFragment extends Fragment {
                 PrintStream out = new PrintStream(os,true,"US-ASCII");
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(),"US-ASCII"));
 
-                friendIDstr = friendID.getText();
                 String sendInfo = "q"+friendIDstr.toString();
                 out.print(sendInfo);
                 os.write((byte)0);
@@ -324,6 +341,10 @@ public class AddressFragment extends Fragment {
      * 向已经获得 IP 地址的好友发送添加信息
      */
     private class SendToNewFriend implements Runnable{
+        private String friend_ip;
+        public SendToNewFriend(String friend_ip){
+            this.friend_ip = friend_ip;
+        }
         @Override
         public void run() {
             Message message = Message.obtain();

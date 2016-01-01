@@ -63,14 +63,18 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
 
     // 接收到的消息
     String receivedID = null;
+    String received_file_id = null;
     ChatInfo receivedChatInfo = null;
     AddrInfo receivedAddrInfo = null;
+    FileInfo receivedFileInfo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferences settings = getSharedPreferences("setting", 0);
         CharSequence id = settings.getString("id", "NULL");
+        setHost_path();
+        //Toast.makeText(this,host_file_path,Toast.LENGTH_LONG).show();
         if (id.equals("NULL")){
             // name == NULL  no user log in
             Intent intent = new Intent();
@@ -137,6 +141,11 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                     MainActivity.this.sendBroadcast(intent);
                     break;
 
+                case FILE_MESSAGE:
+                    // 成功接收到文件
+                    Toast.makeText(getApplicationContext(),received_file_id+"成功向您发送了文件"+receivedFileInfo.getFile_name(),Toast.LENGTH_LONG).show();
+                    break;
+
                 case SUCCESS_LINK:
                     // 向对方发送自己的用户信息
                     String friend_ip = (String)message.obj;
@@ -200,7 +209,12 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
                  * 文件
                  * */
                 if (msg.equals("FILE_MESSAGE")){
-
+                    received_file_id = (String) objIn.readObject();
+                    receivedFileInfo = (FileInfo)objIn.readObject();
+                    receivedFileInfo.setFile_path(host_file_path+receivedFileInfo.getFile_name());
+                    receivedFileInfo.storeBytesToFile();
+                    message.what = FILE_MESSAGE;
+                    handler.sendMessage(message);
                 }
 
                 objIn.close();
@@ -210,6 +224,40 @@ public class MainActivity extends FragmentActivity implements OnClickListener {
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * 获取存放收到文件的地址路径
+     */
+    private static String host_file_path = null;
+    void setHost_path(){
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            // 如果SD卡存在，则存在SD卡中
+            host_file_path = Environment.getExternalStorageDirectory() + File.separator + "MyChat";
+            File file = new File(host_file_path);
+            if (!file.exists()){
+                file.mkdir();
+            }
+            host_file_path = host_file_path + File.separator + "File" ;
+            file = new File(host_file_path);
+            if (!file.exists()){
+                file.mkdir();
+            }
+            host_file_path = host_file_path + File.separator;
+        }else{
+            // 如果SD卡不存在，则存在内存中
+            host_file_path = this.getFilesDir().toString() + File.separator + "MyChat";
+            File file = new File(host_file_path);
+            if (!file.exists()){
+                file.mkdir();
+            }
+            host_file_path = host_file_path + File.separator + "File" ;
+            file = new File(host_file_path);
+            if (!file.exists()){
+                file.mkdir();
+            }
+            host_file_path = host_file_path + File.separator;
         }
     }
 

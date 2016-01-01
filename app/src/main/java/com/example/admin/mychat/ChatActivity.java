@@ -6,11 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,6 +25,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -133,7 +137,7 @@ public class ChatActivity extends Activity {
                 if (send_info.equals("") == false) {
                     // 没有对方ip，则需要查询
                     if (friend_ip == null) {
-                        new Thread(new ConnectServer()).start();
+                        new Thread(new AskFriendOnServer()).start();
                     } else {
                         // 发送消息
                         new Thread(new SendMessage()).start();
@@ -156,16 +160,75 @@ public class ChatActivity extends Activity {
 
     /**
      * 处理 ActionBar 动作按钮的点击事件
+     * 发送文件
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // 处理动作按钮的点击事件
         switch (item.getItemId()) {
             case R.id.sendFile:
-                Toast.makeText(this,"发送文件",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this,"发送文件",Toast.LENGTH_SHORT).show();
+                showFileChooser();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
+     * 调用系统的文件选择软件来选择文件
+     */
+    private void showFileChooser() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "请选择一个要上传的文件"), REQUEST_FILE_CHOOSE);
+        } catch (android.content.ActivityNotFoundException ex) {
+            // Potentially direct the user to the Market with a Dialog
+            Toast.makeText(this, "请安装文件管理器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 处理文件选择器返回的文件路径
+     */
+    @Override
+    public void onActivityResult(int requestCode , int resultCode , Intent data){
+        if(resultCode == RESULT_OK){
+            if (requestCode == REQUEST_FILE_CHOOSE){
+                Uri uri = data.getData();
+                path = uri.getPath();
+                String[] parts = path.split("/");
+                filename = parts[parts.length-1];
+                /**
+                 * filename 如果是纯粹的数字，且没有后缀的话
+                 * 此时path并不代表真实的路径
+                 * filename也不代表真实的名字
+                 * 需要进行转化，这个在三星手机的自带的文件查找功能里面发现需要转换
+                 * 但是小米手机的自带的文件查找功能则不需要
+                 */
+                if (Pattern.matches("\\d+",filename)){
+                    String[] proj = { MediaStore.Images.Media.DATA };
+                    Cursor actualimagecursor = managedQuery(uri, proj, null, null, null);
+                    int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                    actualimagecursor.moveToFirst();
+                    path = actualimagecursor.getString(actual_image_column_index);
+                    parts = path.split("/");
+                    filename = parts[parts.length-1];
+                }
+                //Toast.makeText(this,path,Toast.LENGTH_LONG).show();
+                //
+                // Toast.makeText(this,filename,Toast.LENGTH_LONG).show();
+
+                send_file_judege = true;
+                if (friend_ip == null) {
+                    new Thread(new AskFriendOnServer()).start();
+                } else {
+                    // 发送文件
+                    //Toast.makeText(this,friend_ip.toString(),Toast.LENGTH_SHORT).show();
+                    new Thread(new SendFile(path,filename)).start();
+                }
+            }
         }
     }
 
@@ -188,10 +251,15 @@ public class ChatActivity extends Activity {
         }
     }
 
-    static final int SUCCESS_LINK_SERVER = 1;
-    static final int FAIL_LINK_SERVER = 2;
-    static final int FAIL_LINK_FRIEND = 3;
-    static final int SUCCESS_LINK_FRIEND = 4;
+    private static final int SUCCESS_LINK_SERVER = 1;
+    private static final int FAIL_LINK_SERVER = 2;
+    private static final int FAIL_LINK_FRIEND = 3;
+    private static final int SUCCESS_LINK_FRIEND = 4;
+    private static final int REQUEST_FILE_CHOOSE = 5;
+    private static final int SUCCESS_SEND_FILE = 6;
+    private static boolean send_file_judege = false;
+    private String path;
+    private String filename;
     /**
      * 处理网络线程的消息
      * */
@@ -203,8 +271,14 @@ public class ChatActivity extends Activity {
                     String info = (String)message.obj;
                     //Toast.makeText(ChatActivity.this,info,Toast.LENGTH_SHORT).show();
                     friend_ip = info;
-                    // 发送消息
-                    new Thread(new SendMessage()).start();
+                    if (send_file_judege){
+                        // 发送文件
+                        new Thread(new SendFile(path,filename)).start();
+                        send_file_judege = false;
+                    }else{
+                        // 发送消息
+                        new Thread(new SendMessage()).start();
+                    }
                     break;
 
                 case FAIL_LINK_SERVER:
@@ -230,6 +304,10 @@ public class ChatActivity extends Activity {
 
                     break;
 
+                case SUCCESS_SEND_FILE:
+                    Toast.makeText(ChatActivity.this,"文件发送成功",Toast.LENGTH_LONG).show();
+                    break;
+
                 default:break;
             }
         }
@@ -250,7 +328,7 @@ public class ChatActivity extends Activity {
     /**
      * 向服务器查询，获取对方的ip地址
      * */
-    private class ConnectServer implements Runnable{
+    private class AskFriendOnServer implements Runnable{
         public void run() {
             SharedPreferences settings = getSharedPreferences("setting", 0);
             String ipStr = settings.getString("ip", "166.111.140.14");
@@ -337,4 +415,52 @@ public class ChatActivity extends Activity {
         }
     }
 
+
+    /**
+     * 向好友发送文件
+     */
+    private class SendFile implements Runnable{
+        private String file_path;
+        private String filename;
+        public SendFile(String file_path,String filename){
+            this.file_path = file_path;
+            this.filename = filename;
+        }
+
+        @Override
+        public void run() {
+            Message message = Message.obtain();
+            try {
+                Socket socket = new Socket(friend_ip, 8000);
+                ObjectOutputStream objOut = new ObjectOutputStream(socket.getOutputStream());
+                // 文件消息标识符
+                String str = new String("FILE_MESSAGE");
+                objOut.writeObject(str);
+                // 自己的ID
+                objOut.writeObject(my_id);
+                // 发送文件
+                FileInfo fileInfo = new FileInfo(file_path,filename);
+                fileInfo.storeFileToBytes();
+                objOut.writeObject(fileInfo);
+
+                objOut.flush();
+                objOut.close();
+                socket.close();
+
+                message.obj ="file succeed";
+                message.what = SUCCESS_SEND_FILE;
+                mHandler.sendMessage(message);
+            } catch (UnknownHostException e) {
+                message.obj ="fail to link friends";
+                message.what = FAIL_LINK_FRIEND;
+                mHandler.sendMessage(message);
+                e.printStackTrace();
+            } catch (IOException e) {
+                message.obj ="fail to link friends";
+                message.what = FAIL_LINK_FRIEND;
+                mHandler.sendMessage(message);
+                e.printStackTrace();
+            }
+        }
+    }
 }
